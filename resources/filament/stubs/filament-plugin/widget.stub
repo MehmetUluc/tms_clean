@@ -1,0 +1,10 @@
+<?php
+
+namespace {{VENDOR_NAME}}\{{PLUGIN_NAME}}\Filament\Widgets;
+
+use Filament\Widgets\Widget;
+
+class {{WIDGET_NAME}} extends Widget
+{
+    protected static string $view = '{{PACKAGE_SLUG}}::filament.widgets.{{WIDGET_NAME|kebab}}';
+}

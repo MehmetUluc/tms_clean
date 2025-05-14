@@ -1,0 +1,11 @@
+<?php
+
+namespace {{VENDOR_NAME}}\{{PLUGIN_NAME}}\Filament\Pages;
+
+use Filament\Pages\Page;
+
+class {{PAGE_NAME}} extends Page
+{
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static string $view = '{{PACKAGE_SLUG}}::filament.pages.{{PAGE_NAME|kebab}}';
+}

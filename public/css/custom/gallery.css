@@ -1,0 +1,42 @@
+/* Gallery CSS */
+.simple-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 0.5rem;
+    margin: 0;
+}
+
+.simple-gallery__item {
+    aspect-ratio: 1/1;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.simple-gallery__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.single-image {
+    aspect-ratio: 16/9;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.single-image__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Mobile styles */
+@media (max-width: 640px) {
+    .simple-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

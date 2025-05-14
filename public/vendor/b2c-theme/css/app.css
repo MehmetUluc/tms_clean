@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --color-primary-50: theme('colors.blue.50');
+    --color-primary-100: theme('colors.blue.100');
+    --color-primary-200: theme('colors.blue.200');
+    --color-primary-300: theme('colors.blue.300');
+    --color-primary-400: theme('colors.blue.400');
+    --color-primary-500: theme('colors.blue.500');
+    --color-primary-600: theme('colors.blue.600');
+    --color-primary-700: theme('colors.blue.700');
+    --color-primary-800: theme('colors.blue.800');
+    --color-primary-900: theme('colors.blue.900');
+}
+
+/* Override primary color variables to use CSS custom properties */
+.text-primary-50, .bg-primary-50, .border-primary-50 { --tw-text-opacity: 1; color: rgba(var(--color-primary-50), var(--tw-text-opacity)); }
+.text-primary-100, .bg-primary-100, .border-primary-100 { --tw-text-opacity: 1; color: rgba(var(--color-primary-100), var(--tw-text-opacity)); }
+.text-primary-200, .bg-primary-200, .border-primary-200 { --tw-text-opacity: 1; color: rgba(var(--color-primary-200), var(--tw-text-opacity)); }
+.text-primary-300, .bg-primary-300, .border-primary-300 { --tw-text-opacity: 1; color: rgba(var(--color-primary-300), var(--tw-text-opacity)); }
+.text-primary-400, .bg-primary-400, .border-primary-400 { --tw-text-opacity: 1; color: rgba(var(--color-primary-400), var(--tw-text-opacity)); }
+.text-primary-500, .bg-primary-500, .border-primary-500 { --tw-text-opacity: 1; color: rgba(var(--color-primary-500), var(--tw-text-opacity)); }
+.text-primary-600, .bg-primary-600, .border-primary-600 { --tw-text-opacity: 1; color: rgba(var(--color-primary-600), var(--tw-text-opacity)); }
+.text-primary-700, .bg-primary-700, .border-primary-700 { --tw-text-opacity: 1; color: rgba(var(--color-primary-700), var(--tw-text-opacity)); }
+.text-primary-800, .bg-primary-800, .border-primary-800 { --tw-text-opacity: 1; color: rgba(var(--color-primary-800), var(--tw-text-opacity)); }
+.text-primary-900, .bg-primary-900, .border-primary-900 { --tw-text-opacity: 1; color: rgba(var(--color-primary-900), var(--tw-text-opacity)); }
+
+/* Custom components */
+@layer components {
+    /* Button styles */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+    }
+    
+    .btn-primary {
+        @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    }
+    
+    .btn-secondary {
+        @apply bg-white text-primary-600 border-primary-600 hover:bg-primary-50 focus:ring-primary-500;
+    }
+    
+    /* Card styles */
+    .card {
+        @apply bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden;
+    }
+    
+    .card-header {
+        @apply p-4 border-b border-gray-200 dark:border-gray-700;
+    }
+    
+    .card-body {
+        @apply p-4;
+    }
+    
+    .card-footer {
+        @apply p-4 border-t border-gray-200 dark:border-gray-700;
+    }
+    
+    /* Form styles */
+    .form-input {
+        @apply w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500;
+    }
+    
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+    }
+    
+    .form-error {
+        @apply mt-1 text-sm text-red-600 dark:text-red-500;
+    }
+}
+
+/* Additional custom styles */
+.hero-gradient {
+    background: linear-gradient(to right, rgba(var(--color-primary-900), 0.8), rgba(var(--color-primary-700), 0.7));
+}
+
+/* Dark mode adjustments */
+.dark .hero-gradient {
+    background: linear-gradient(to right, rgba(var(--color-primary-900), 0.9), rgba(var(--color-primary-800), 0.8));
+}
+
+/* Animate transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Date picker customization */
+.date-picker {
+    @apply p-2 border border-gray-300 dark:border-gray-700 rounded-md;
+}
+
+/* Image gallery */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .container {
+        @apply px-4;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}

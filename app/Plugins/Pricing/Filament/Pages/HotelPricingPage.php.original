@@ -1,0 +1,670 @@
+<?php
+
+namespace App\Plugins\Pricing\Filament\Pages;
+
+use App\Plugins\Accommodation\Models\Hotel;
+use App\Plugins\Accommodation\Models\Room;
+use App\Plugins\Booking\Models\BoardType;
+use App\Plugins\Pricing\Models\RatePlan;
+use App\Plugins\Pricing\Services\PricingService;
+use Carbon\Carbon;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\On;
+
+class HotelPricingPage extends Page
+{
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+
+    protected static string $view = 'filament.pages.hotel-pricing-page';
+
+    protected static ?string $navigationLabel = 'Otel Fiyat Yönetimi';
+
+    protected static ?string $title = 'Otel Fiyat Yönetimi';
+
+    protected static ?int $navigationSort = 3;
+
+    /**
+     * The hotel property - can be either a Hotel model or an ID string when coming from form
+     * @var \App\Plugins\Accommodation\Models\Hotel|string|null
+     */
+    public $hotel = null;
+    
+    /**
+     * The selected hotel ID from the form
+     * @var int|string|null
+     */
+    public $selectedHotelId = null;
+    
+    /**
+     * Define Livewire property attributes
+     */
+    // Livewire form için kullanılan özellikler
+    public $formSelectedHotelId;
+    public $formSelectedRooms = [];
+    public $formSelectedBoardTypes = [];
+    public $formStartDate;
+    public $formEndDate;
+    public $formSelectedDays = [];
+    
+    public ?array $selectedRooms = [];
+
+    public ?array $selectedBoardTypes = [];
+
+    public ?array $selectedDays = [];
+
+    public ?string $startDate = null;
+
+    public ?string $endDate = null;
+
+    public bool $showPricingForm = false;
+
+    public array $roomsData = [];
+
+    public array $boardTypesData = [];
+
+    public array $ratePlansData = [];
+
+    public array $pricingData = [];
+
+    private PricingService $pricingService;
+
+    public function boot(): void
+    {
+        $this->pricingService = new PricingService();
+    }
+
+    public function mount($hotel = null): void
+    {
+        \Log::info('Mount method called', [
+            'hotel_param' => $hotel,
+            'hotel_param_type' => gettype($hotel)
+        ]);
+    
+        // Set default dates (today to +7 days)
+        $this->startDate = Carbon::today()->format('Y-m-d');
+        $this->endDate = Carbon::today()->addDays(7)->format('Y-m-d');
+        
+        // Set default days (all days)
+        $this->selectedDays = ['1', '2', '3', '4', '5', '6', '7'];
+        
+        // Initialize form data
+        $this->formStartDate = Carbon::today()->format('Y-m-d');
+        $this->formEndDate = Carbon::today()->addDays(7)->format('Y-m-d');
+        $this->formSelectedDays = ['1', '2', '3', '4', '5', '6', '7'];
+        
+        // If hotel parameter is provided via URL
+        if ($hotel) {
+            try {
+                $hotelId = is_numeric($hotel) ? intval($hotel) : $hotel;
+                $hotelModel = Hotel::find($hotelId);
+                
+                \Log::info('Loading hotel from parameter', [
+                    'hotelId' => $hotelId,
+                    'hotelModelLoaded' => $hotelModel ? true : false
+                ]);
+                
+                if ($hotelModel) {
+                    // Set properties
+                    $this->selectedHotelId = $hotelId;
+                    $this->formSelectedHotelId = $hotelId;
+                    $this->hotel = $hotelModel;
+                    $this->loadRoomsAndBoardTypes();
+                    
+                    \Log::info('Hotel set from parameter', [
+                        'selectedHotelId' => $this->selectedHotelId,
+                        'formSelectedHotelId' => $this->formSelectedHotelId,
+                        'hotel_id' => $this->hotel->id,
+                        'hotel_name' => $this->hotel->name
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error mounting with hotel parameter: ' . $e->getMessage());
+                $this->hotel = null;
+                $this->selectedHotelId = null;
+                $this->formSelectedHotelId = null;
+            }
+        }
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Section::make('Fiyat Görüntüleme Kriterleri')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                Select::make('formSelectedHotelId')
+                                    ->label('Otel')
+                                    ->options(Hotel::all()->pluck('name', 'id'))
+                                    ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state) {
+                                        \Log::info('Hotel state updated in select box', [
+                                            'state' => $state,
+                                            'state_type' => gettype($state)
+                                        ]);
+                                        
+                                        // Reset related data
+                                        $this->selectedRooms = [];
+                                        $this->formSelectedRooms = [];
+                                        $this->selectedBoardTypes = [];
+                                        $this->formSelectedBoardTypes = [];
+                                        $this->roomsData = [];
+                                        $this->boardTypesData = [];
+                                        
+                                        // If no selection, reset everything
+                                        if (!$state) {
+                                            $this->hotel = null;
+                                            $this->selectedHotelId = null;
+                                            $this->formSelectedHotelId = null;
+                                            \Log::info('Hotel selection cleared');
+                                            return;
+                                        }
+                                        
+                                        // Always treat state as an ID and find the hotel model
+                                        try {
+                                            $hotelId = is_numeric($state) ? intval($state) : $state;
+                                            \Log::info('Loading hotel model', ['hotelId' => $hotelId]);
+                                            $hotel = Hotel::find($hotelId);
+                                            
+                                            if ($hotel) {
+                                                \Log::info('Hotel model found', [
+                                                    'id' => $hotel->id,
+                                                    'name' => $hotel->name
+                                                ]);
+                                                
+                                                // Important: Set both properties
+                                                $this->selectedHotelId = $hotelId;
+                                                $this->formSelectedHotelId = $hotelId;
+                                                $this->hotel = $hotel;
+                                                
+                                                // Load dependent data
+                                                $this->loadRoomsAndBoardTypes();
+                                            } else {
+                                                \Log::warning('Hotel not found with ID', ['hotelId' => $hotelId]);
+                                                $this->hotel = null;
+                                                $this->selectedHotelId = null;
+                                                $this->formSelectedHotelId = null;
+                                            }
+                                        } catch (\Exception $e) {
+                                            \Log::error('Error updating hotel state: ' . $e->getMessage(), [
+                                                'trace' => $e->getTraceAsString()
+                                            ]);
+                                            $this->hotel = null;
+                                            $this->selectedHotelId = null;
+                                            $this->formSelectedHotelId = null;
+                                        }
+                                    }),
+                                
+                                CheckboxList::make('formSelectedRooms')
+                                    ->label('Odalar')
+                                    ->options(function (callable $get) {
+                                        $hotelId = $get('formSelectedHotelId');
+                                        if (!$hotelId) {
+                                            return [];
+                                        }
+                                        
+                                        $options = Room::where('hotel_id', $hotelId)
+                                                 ->pluck('name', 'id')
+                                                 ->toArray();
+                                        
+                                        \Log::info('Room options loaded', [
+                                            'hotelId' => $hotelId,
+                                            'options_count' => count($options)
+                                        ]);
+                                        
+                                        return $options;
+                                    })
+                                    ->columns(2)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selectedRooms = $state ?? [];
+                                        $this->formSelectedRooms = $state ?? [];
+                                        $this->checkRatePlans();
+                                    }),
+                                
+                                CheckboxList::make('formSelectedBoardTypes')
+                                    ->label('Pansiyon Tipleri')
+                                    ->options(BoardType::pluck('name', 'id')->toArray())
+                                    ->columns(2)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selectedBoardTypes = $state ?? [];
+                                        $this->formSelectedBoardTypes = $state ?? [];
+                                        $this->checkRatePlans();
+                                    }),
+                            ]),
+                            
+                        Grid::make(2)
+                            ->schema([
+                                DatePicker::make('formStartDate')
+                                    ->label('Başlangıç Tarihi')
+                                    ->required()
+                                    ->format('Y-m-d')
+                                    ->minDate(Carbon::today())
+                                    ->default(Carbon::today())
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->startDate = $state;
+                                    }),
+                                
+                                DatePicker::make('formEndDate')
+                                    ->label('Bitiş Tarihi')
+                                    ->required()
+                                    ->format('Y-m-d')
+                                    ->minDate(function (callable $get) {
+                                        $startDate = $get('formStartDate');
+                                        return $startDate ? Carbon::parse($startDate) : Carbon::today();
+                                    })
+                                    ->default(Carbon::today()->addDays(7))
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->endDate = $state;
+                                    }),
+                            ]),
+                            
+                        CheckboxList::make('formSelectedDays')
+                            ->label('Günler')
+                            ->options([
+                                '1' => 'Pazartesi',
+                                '2' => 'Salı',
+                                '3' => 'Çarşamba',
+                                '4' => 'Perşembe',
+                                '5' => 'Cuma',
+                                '6' => 'Cumartesi',
+                                '7' => 'Pazar',
+                            ])
+                            ->columns(7)
+                            ->default(['1', '2', '3', '4', '5', '6', '7'])
+                            ->live()
+                            ->afterStateUpdated(function ($state) {
+                                $this->selectedDays = $state ?? [];
+                            }),
+                    ]),
+            ]);
+    }
+
+    /**
+     * Load rooms and board types for the selected hotel
+     * 
+     * @return void
+     */
+    private function loadRoomsAndBoardTypes(): void
+    {
+        try {
+            // Reset data if hotel is not valid
+            if (!$this->hotel) {
+                $this->resetRoomAndBoardTypeData();
+                return;
+            }
+
+            // If hotel is a string (ID), try to find the model
+            if (is_string($this->hotel) && is_numeric($this->hotel)) {
+                $hotelModel = Hotel::find((int)$this->hotel);
+                if ($hotelModel) {
+                    $this->hotel = $hotelModel;
+                } else {
+                    $this->resetRoomAndBoardTypeData();
+                    return;
+                }
+            }
+
+            // Check if hotel is a proper object with an id property
+            if (!is_object($this->hotel) || !property_exists($this->hotel, 'id') || !$this->hotel->id) {
+                $this->resetRoomAndBoardTypeData();
+                return;
+            }
+
+            $hotelId = $this->hotel->id;
+
+            // Get rooms for this hotel
+            $rooms = Room::where('hotel_id', $hotelId)->get();
+            $this->roomsData = $rooms->keyBy('id')->toArray();
+
+            // Get board types 
+            $boardTypes = BoardType::all();
+            $this->boardTypesData = $boardTypes->keyBy('id')->toArray();
+        } catch (\Exception $e) {
+            \Log::error('Error loading rooms and board types: ' . $e->getMessage());
+            $this->resetRoomAndBoardTypeData();
+        }
+    }
+
+    /**
+     * Reset room and board type data
+     * 
+     * @return void
+     */
+    private function resetRoomAndBoardTypeData(): void
+    {
+        $this->roomsData = [];
+        $this->boardTypesData = [];
+    }
+
+    /**
+     * Check and create rate plans for selected rooms and board types
+     * 
+     * @return void
+     */
+    private function checkRatePlans(): void
+    {
+        try {
+            $this->showPricingForm = false;
+            $this->ratePlansData = [];
+            
+            // Validate required data
+            if (empty($this->selectedRooms) || empty($this->selectedBoardTypes)) {
+                return;
+            }
+            
+            // Get hotel ID safely
+            $hotelId = $this->getHotelId();
+            if (!$hotelId) {
+                return;
+            }
+
+            $ratePlans = collect();
+            
+            // For each room-board type combination, check if rate plan exists or create it
+            foreach ($this->selectedRooms as $roomId) {
+                foreach ($this->selectedBoardTypes as $boardTypeId) {
+                    try {
+                        $room = Room::find($roomId);
+                        $isPerPerson = $room ? $room->is_per_person : true;
+                        
+                        $ratePlan = RatePlan::firstOrCreate([
+                            'hotel_id' => $hotelId,
+                            'room_id' => $roomId,
+                            'board_type_id' => $boardTypeId,
+                        ], [
+                            'is_per_person' => $isPerPerson,
+                            'status' => true,
+                        ]);
+                        
+                        $ratePlans->push($ratePlan);
+                    } catch (\Exception $e) {
+                        \Log::error("Error creating rate plan for room {$roomId} and board type {$boardTypeId}: " . $e->getMessage());
+                    }
+                }
+            }
+            
+            $this->ratePlansData = $ratePlans->keyBy('id')->toArray();
+        } catch (\Exception $e) {
+            \Log::error('Error checking rate plans: ' . $e->getMessage());
+            $this->ratePlansData = [];
+        }
+    }
+    
+    /**
+     * Get the hotel ID safely
+     * 
+     * @return int|null
+     */
+    private function getHotelId(): ?int
+    {
+        \Log::info('getHotelId called', [
+            'selectedHotelId' => $this->selectedHotelId,
+            'hotel_type' => gettype($this->hotel),
+            'hotel_object_id' => is_object($this->hotel) && property_exists($this->hotel, 'id') ? $this->hotel->id : null
+        ]);
+        
+        // First priority: Check selectedHotelId
+        if ($this->selectedHotelId) {
+            if (is_numeric($this->selectedHotelId)) {
+                return (int)$this->selectedHotelId;
+            }
+            
+            if (is_string($this->selectedHotelId) && is_numeric($this->selectedHotelId)) {
+                return (int)$this->selectedHotelId;
+            }
+        }
+        
+        // Second priority: Check hotel object
+        if (is_object($this->hotel) && property_exists($this->hotel, 'id') && $this->hotel->id) {
+            return (int)$this->hotel->id;
+        }
+        
+        // Third priority: Check if hotel is an ID directly
+        if (is_numeric($this->hotel)) {
+            return (int)$this->hotel;
+        }
+        
+        if (is_string($this->hotel) && is_numeric($this->hotel)) {
+            return (int)$this->hotel;
+        }
+        
+        // Nothing found
+        \Log::warning('No hotel ID found', [
+            'selectedHotelId' => $this->selectedHotelId,
+            'hotel' => $this->hotel
+        ]);
+        
+        return null;
+    }
+
+    /**
+     * Generate pricing form based on selected criteria
+     * 
+     * @return void
+     */
+    public function generatePricingForm(): void
+    {
+        try {
+            // First, sync form data to our properties
+            $this->selectedHotelId = $this->formSelectedHotelId;
+            $this->selectedRooms = $this->formSelectedRooms;
+            $this->selectedBoardTypes = $this->formSelectedBoardTypes;
+            $this->startDate = $this->formStartDate;
+            $this->endDate = $this->formEndDate;
+            $this->selectedDays = $this->formSelectedDays;
+            
+            // Log initial state to detect potential issues
+            \Log::info('Generate Pricing Form started', [
+                'selectedHotelId' => $this->selectedHotelId,
+                'selectedRooms' => $this->selectedRooms,
+                'selectedBoardTypes' => $this->selectedBoardTypes,
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate,
+                'selectedDays' => $this->selectedDays,
+            ]);
+            
+            // Validate form manually to ensure we have the right values
+            $this->validate([
+                'formSelectedHotelId' => 'required',
+                'formSelectedRooms' => 'required|array|min:1',
+                'formSelectedBoardTypes' => 'required|array|min:1',
+                'formStartDate' => 'required|date',
+                'formEndDate' => 'required|date|after_or_equal:formStartDate',
+                'formSelectedDays' => 'required|array|min:1',
+            ], [
+                'formSelectedHotelId.required' => 'Lütfen bir otel seçin.',
+                'formSelectedRooms.required' => 'Lütfen en az bir oda seçin.',
+                'formSelectedBoardTypes.required' => 'Lütfen en az bir pansiyon tipi seçin.',
+                'formStartDate.required' => 'Lütfen başlangıç tarihi seçin.',
+                'formEndDate.required' => 'Lütfen bitiş tarihi seçin.',
+                'formSelectedDays.required' => 'Lütfen en az bir gün seçin.',
+            ]);
+            
+            // Additional check to log values even after validation
+            \Log::info('Form values after validation', [
+                'selectedHotelId_type' => gettype($this->selectedHotelId),
+                'selectedHotelId_value' => $this->selectedHotelId,
+                'selectedRooms' => $this->selectedRooms,
+                'selectedBoardTypes' => $this->selectedBoardTypes,
+            ]);
+            
+            // Make sure we have a valid hotel
+            if (is_null($this->hotel) || (is_object($this->hotel) && !property_exists($this->hotel, 'id'))) {
+                // Try to load the hotel from the selected ID
+                try {
+                    $hotelId = is_numeric($this->selectedHotelId) ? intval($this->selectedHotelId) : $this->selectedHotelId;
+                    $hotelModel = Hotel::find($hotelId);
+                    
+                    if ($hotelModel) {
+                        $this->hotel = $hotelModel;
+                    } else {
+                        $this->addError('form', 'Seçilen otel bulunamadı.');
+                        return;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error loading hotel: ' . $e->getMessage());
+                    $this->addError('form', 'Otel verisi yüklenirken bir hata oluştu.');
+                    return;
+                }
+            }
+            
+            // Get hotel ID safely
+            $hotelId = $this->getHotelId();
+            if (!$hotelId) {
+                $this->addError('form', 'Geçerli bir otel ID bulunamadı.');
+                return;
+            }
+            
+            // Validate date inputs
+            $this->validate([
+                'startDate' => 'required|date',
+                'endDate' => 'required|date|after_or_equal:startDate',
+                'selectedDays' => 'required|array|min:1',
+            ]);
+            
+            $startDate = Carbon::parse($this->startDate);
+            $endDate = Carbon::parse($this->endDate);
+            
+            // Generate date array based on selected days
+            $dateRange = [];
+            $current = $startDate->copy();
+            
+            while ($current->lte($endDate)) {
+                $dayOfWeek = $current->dayOfWeekIso;
+                
+                if (in_array((string)$dayOfWeek, $this->selectedDays)) {
+                    $dateRange[] = $current->format('Y-m-d');
+                }
+                
+                $current->addDay();
+            }
+            
+            if (empty($dateRange)) {
+                $this->addError('selectedDays', 'Seçilen tarih aralığında uygun gün bulunamadı.');
+                return;
+            }
+            
+            // Make sure we have rate plans
+            if (empty($this->ratePlansData)) {
+                \Log::info('No rate plans found, running checkRatePlans');
+                $this->checkRatePlans();
+                
+                if (empty($this->ratePlansData)) {
+                    $this->addError('form', 'Seçilen oda ve pansiyon tipi kombinasyonları için fiyat planı oluşturulamadı.');
+                    return;
+                }
+            }
+            
+            // Get pricing data for each rate plan
+            $pricingData = [];
+            
+            foreach ($this->ratePlansData as $ratePlanId => $ratePlan) {
+                try {
+                    $pricingByDate = $this->pricingService->getPricingDataForDateRange(
+                        $ratePlanId,
+                        $startDate,
+                        $endDate
+                    );
+                    
+                    // Filter by selected days
+                    $filteredPricing = array_filter($pricingByDate, function ($key) use ($dateRange) {
+                        return in_array($key, $dateRange);
+                    }, ARRAY_FILTER_USE_KEY);
+                    
+                    $pricingData[$ratePlanId] = $filteredPricing;
+                } catch (\Exception $e) {
+                    \Log::error("Error getting pricing data for rate plan {$ratePlanId}: " . $e->getMessage());
+                }
+            }
+            
+            $this->pricingData = $pricingData;
+            $this->showPricingForm = true;
+            
+            // Log successful state
+            \Log::info('Generate Pricing Form success', [
+                'ratePlansCount' => count($this->ratePlansData),
+                'dateRangeCount' => count($dateRange),
+                'showPricingForm' => $this->showPricingForm
+            ]);
+            
+            // Emit event to load livewire component
+            $this->dispatch('pricingDataReady', [
+                'ratePlans' => $this->ratePlansData,
+                'roomsData' => $this->roomsData,
+                'boardTypesData' => $this->boardTypesData,
+                'pricingData' => $this->pricingData,
+                'dateRange' => $dateRange,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error generating pricing form: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->addError('form', 'Fiyat formu oluşturulurken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Refresh pricing data when triggered by Livewire component
+     * 
+     * @return void
+     */
+    #[On('refreshPricingData')]
+    public function refreshPricingData(): void
+    {
+        try {
+            $this->generatePricingForm();
+        } catch (\Exception $e) {
+            \Log::error('Error refreshing pricing data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get data to pass to the view
+     * 
+     * @return array
+     */
+    protected function getViewData(): array
+    {
+        try {
+            return [
+                'roomsCount' => is_array($this->selectedRooms) ? count($this->selectedRooms) : 0,
+                'boardTypesCount' => is_array($this->selectedBoardTypes) ? count($this->selectedBoardTypes) : 0,
+                'ratePlansCount' => is_array($this->ratePlansData) ? count($this->ratePlansData) : 0,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error getting view data: ' . $e->getMessage());
+            return [
+                'roomsCount' => 0,
+                'boardTypesCount' => 0,
+                'ratePlansCount' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get navigation badge showing number of rate plans
+     * 
+     * @return string|null
+     */
+    public static function getNavigationBadge(): ?string
+    {
+        try {
+            return (string) RatePlan::count();
+        } catch (\Exception $e) {
+            \Log::error('Error getting navigation badge: ' . $e->getMessage());
+            return null;
+        }
+    }
+}

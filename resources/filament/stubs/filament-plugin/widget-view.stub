@@ -1,0 +1,4 @@
+<div>
+    <h2>{{WIDGET_NAME}} Widget'ı</h2>
+    <p>Bu widget {{PLUGIN_NAME}} eklentisinden geliyor.</p>
+</div>

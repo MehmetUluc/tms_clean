@@ -1,0 +1,32 @@
+<x-filament::page>
+<form wire:submit="generatePricingForm">
+{{ $this->form }}
+
+<div class="mt-4 flex justify-end">
+<x-filament::button type="submit">Fiyat Tablosunu Oluştur</x-filament::button>
+</div>
+</form>
+
+@php
+$showPricingTable = $this->showPricingForm;
+@endphp
+
+@if($showPricingTable)
+<div class="mt-8">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">
+            {{ is_object($this->hotel) && property_exists($this->hotel, 'name') ? $this->hotel->name : 'Otel' }} Fiyat Tablosu
+        </h2>
+        <div>
+            <x-filament::button wire:click="$dispatch('refreshPricingData')" color="secondary" icon="heroicon-o-arrow-path">
+                Yenile
+            </x-filament::button>
+        </div>
+    </div>
+
+    <div id="pricing-form-container">
+        <livewire:pricing::pricing-form />
+    </div>
+</div>
+@endif
+</x-filament::page>

@@ -1,0 +1,24 @@
+# {{PLUGIN_NAME}} Plugin
+
+Laravel Filament için geliştirilen {{PLUGIN_NAME}} eklentisi.
+
+## Kurulum
+
+```bash
+composer require {{VENDOR_NAME|lower}}/{{PACKAGE_SLUG}}
+```
+
+## Yayınlama
+
+```bash
+php artisan vendor:publish --tag="{{PACKAGE_SLUG}}-config"
+php artisan vendor:publish --tag="{{PACKAGE_SLUG}}-views"
+```
+
+## Kullanım
+
+Panel provider'ınıza eklenti olarak ekleyin:
+
+```php
+->plugin(\{{VENDOR_NAME}}\{{PLUGIN_NAME}}\{{PLUGIN_NAME}}Plugin::make())
+```

@@ -1,0 +1,46 @@
+<x-filament::page>
+    <form wire:submit="generatePricingForm">
+        {{ $this->form }}
+
+        @if ($errors->has('form'))
+            <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-md border border-red-200">
+                {{ $errors->first('form') }}
+            </div>
+        @endif
+
+        <div class="mt-4 flex justify-end">
+            <x-filament::button 
+                type="submit"
+            >
+                Fiyat Tablosunu Oluştur
+            </x-filament::button>
+        </div>
+    </form>
+
+    @if($this->showPricingForm && ($this->selectedHotelId || ($this->data['selectedHotelId'] ?? null)))
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">
+                    {{ is_object($this->hotel) && property_exists($this->hotel, 'name') ? $this->hotel->name : 'Otel' }} Fiyat Tablosu 
+                    <span class="text-sm text-gray-500">
+                        ({{ $roomsCount }} oda, {{ $boardTypesCount }} pansiyon tipi için {{ $ratePlansCount }} plan)
+                    </span>
+                </h2>
+                
+                <div>
+                    <x-filament::button 
+                        wire:click="$dispatch('refreshPricingData')"
+                        color="secondary"
+                        icon="heroicon-o-arrow-path"
+                    >
+                        Yenile
+                    </x-filament::button>
+                </div>
+            </div>
+
+            <livewire:pricing::pricing-form 
+                wire:key="pricing-form-{{ $this->startDate }}-{{ $this->endDate }}-{{ implode(',', $this->selectedRooms) }}-{{ implode(',', $this->selectedBoardTypes) }}-{{ implode(',', $this->selectedDays) }}"
+            />
+        </div>
+    @endif
+</x-filament::page>

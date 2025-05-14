@@ -1,0 +1,95 @@
+<x-filament::section>
+    <div class="flex items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight">
+                Son Rezervasyonlar
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Son günlerde alınan rezervasyonların durumu
+            </p>
+        </div>
+        
+        <div>
+            <a href="{{ route('filament.admin.resources.reservations.index') }}" class="filament-button filament-button-size-sm inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset dark:focus:ring-offset-0 min-h-[2rem] px-3 text-sm text-white shadow focus:ring-white border-transparent bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700">
+                <span>Tüm Rezervasyonlar</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </div>
+    </div>
+    
+    <div class="border border-gray-300 dark:border-gray-700 rounded-xl overflow-hidden mt-4">
+        <div class="overflow-x-auto">
+            <table class="w-full divide-y table-auto">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-gray-800">
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">No</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Misafir</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Oda</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Giriş</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Çıkış</th>
+                        <th class="px-4 py-3.5 text-center text-sm font-medium text-gray-700 dark:text-gray-200">Gece</th>
+                        <th class="px-4 py-3.5 text-center text-sm font-medium text-gray-700 dark:text-gray-200">Yetişkin</th>
+                        <th class="px-4 py-3.5 text-center text-sm font-medium text-gray-700 dark:text-gray-200">Çocuk</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Toplam</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Durum</th>
+                        <th class="px-4 py-3.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                    @foreach($this->getDummyReservations() as $reservation)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/10">
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200">{{ $reservation['id'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{{ $reservation['guest_name'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{{ $reservation['room_name'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{{ $reservation['check_in'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{{ $reservation['check_out'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 text-center">{{ $reservation['nights'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 text-center">{{ $reservation['adults'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 text-center">{{ $reservation['children'] }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{{ $reservation['total_price'] }}</td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center justify-center min-h-6 px-2 py-0.5 text-sm font-medium tracking-tight rounded-xl whitespace-nowrap {{ match($reservation['status_color']) {
+                                    'success' => 'text-success-700 bg-success-500/10 dark:text-success-500',
+                                    'warning' => 'text-warning-700 bg-warning-500/10 dark:text-warning-500',
+                                    'primary' => 'text-primary-700 bg-primary-500/10 dark:text-primary-500',
+                                    'danger' => 'text-danger-700 bg-danger-500/10 dark:text-danger-500',
+                                    default => 'text-gray-700 bg-gray-500/10 dark:text-gray-300',
+                                } }}">
+                                    {{ $reservation['status_label'] }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-2">
+                                    <a href="{{ route('filament.admin.resources.reservations.edit', ['record' => $reservation['id']]) }}" class="text-primary-600 hover:text-primary-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                                            <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                    
+                                    @if($reservation['status'] === 'confirmed')
+                                        <button type="button" class="text-success-600 hover:text-success-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                                <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                    
+                                    @if($reservation['status'] === 'checked_in')
+                                        <button type="button" class="text-primary-600 hover:text-primary-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                                <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H6.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L6.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</x-filament::section>

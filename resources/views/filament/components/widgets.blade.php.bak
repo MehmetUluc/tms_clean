@@ -1,0 +1,15 @@
+@props(['widgets' => []])
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 fi-wi">
+    @foreach ($widgets as $widgetKey => $widget)
+        @if (class_exists($widget))
+            @if (method_exists($widget, 'canView'))
+                @if ($widget::canView())
+                    @livewire($widget, [], key("widget-{$widgetKey}"))
+                @endif
+            @else
+                @livewire($widget, [], key("widget-{$widgetKey}"))
+            @endif
+        @endif
+    @endforeach
+</div>

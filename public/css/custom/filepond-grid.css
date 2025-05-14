@@ -1,0 +1,80 @@
+/* FilePond Grid Fixer - Doğrudan hedefleme */
+
+/* Liste görünümünü grid'e dönüştürme */
+.filepond--list {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Liste öğelerinin transform stillerini düzeltme */
+.filepond--item {
+    position: relative !important;
+    transform: none !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 100% 0 !important; /* Kare yapmak için */
+    left: 0 !important;
+    top: 0 !important;
+}
+
+/* Tüm içerik öğelerinin mutlak konumlandırılması */
+.filepond--item > * {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Panel öğelerinin düzeltilmesi */
+.filepond--panel-top.filepond--item-panel,
+.filepond--panel-center.filepond--item-panel,
+.filepond--panel-bottom.filepond--item-panel {
+    transform: none !important;
+}
+
+.filepond--panel-center.filepond--item-panel {
+    top: 0 !important;
+    height: 100% !important;
+}
+
+.filepond--panel-bottom.filepond--item-panel {
+    bottom: 0 !important;
+    top: auto !important;
+}
+
+/* Dosya bilgisi ve durum bilgisi görünüm düzeni */
+.filepond--file-info,
+.filepond--file-status {
+    display: none !important;
+}
+
+/* Düğmelerin konumlandırılması */
+.filepond--file-action-button.filepond--action-remove-item {
+    top: 5px !important;
+    left: 5px !important;
+}
+
+.filepond--file-action-button.filepond--action-edit-item {
+    bottom: 5px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+/* Mobil görünüm için grid ayarları */
+@media (max-width: 768px) {
+    .filepond--list {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .filepond--list {
+        grid-template-columns: repeat(1, 1fr) !important;
+    }
+}

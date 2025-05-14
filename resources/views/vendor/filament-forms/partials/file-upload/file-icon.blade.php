@@ -1,0 +1,1 @@
+@include('components.file-upload.file-icon')

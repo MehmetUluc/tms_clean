@@ -1,0 +1,7 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('/plugin-test', function () {
+    return 'Merhaba, {{PLUGIN_NAME}} plugin çalışıyor!';
+});
