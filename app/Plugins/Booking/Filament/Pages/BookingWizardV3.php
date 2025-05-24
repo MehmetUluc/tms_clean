@@ -25,7 +25,6 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Computed;
 
 class BookingWizardV3 extends Page implements HasForms
@@ -152,7 +151,7 @@ class BookingWizardV3 extends Page implements HasForms
                         ->description('Complete your booking')
                         ->schema($this->getPaymentSummarySchema()),
                 ])
-                ->submitAction(new HtmlString('<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-success">Complete Booking</button>'))
+                ->submitAction('Complete Booking')
             ])
             ->statePath('data');
     }
@@ -352,12 +351,7 @@ class BookingWizardV3 extends Page implements HasForms
                             return [
                                 Forms\Components\Placeholder::make('no_children')
                                     ->label('')
-                                    ->content(new HtmlString('<div class="text-center text-gray-500 py-4">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                        </svg>
-                                        <p class="mt-2">Add children to specify their ages</p>
-                                    </div>'))
+                                    ->content(fn () => view('booking::components.booking-wizard.no-children-placeholder'))
                             ];
                         })
                         ->visible(fn (Get $get) => intval($get('children') ?? 0) > 0)
@@ -382,29 +376,10 @@ class BookingWizardV3 extends Page implements HasForms
                             // Summary Card
                             Forms\Components\Placeholder::make('booking_summary')
                                 ->label('')
-                                ->content(function () {
-                                    $nights = $this->getNights();
-                                    $totalGuests = $this->adults + $this->children;
-                                    
-                                    return new HtmlString('
-                                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center space-x-2">
-                                                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span class="text-sm font-medium">' . $nights . ' ' . ($nights === 1 ? 'Night' : 'Nights') . '</span>
-                                                </div>
-                                                <div class="flex items-center space-x-2">
-                                                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                    <span class="text-sm font-medium">' . $totalGuests . ' ' . ($totalGuests === 1 ? 'Guest' : 'Guests') . '</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ');
-                                })
+                                ->content(fn () => view('booking::components.booking-wizard.booking-summary', [
+                                    'nights' => $this->getNights(),
+                                    'totalGuests' => $this->adults + $this->children,
+                                ]))
                                 ->columnSpan(1),
                         ]),
                 ])
@@ -451,48 +426,17 @@ class BookingWizardV3 extends Page implements HasForms
         
         // Room Selection Summary at the top
         if (!empty($this->selectedRooms)) {
-            $hotel = $this->getSelectedHotel();
-            $nights = $this->getNights();
-            
-            $summaryHtml = '<div class="guest-form-section">';
-            $summaryHtml .= '<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">';
-            $summaryHtml .= '<h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">';
-            $summaryHtml .= '<svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
-            $summaryHtml .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />';
-            $summaryHtml .= '</svg>Your Selection Summary</h3>';
-            
-            if ($hotel) {
-                $summaryHtml .= '<div class="text-sm text-gray-700 dark:text-gray-300 space-y-2">';
-                $summaryHtml .= '<p class="font-medium text-base">' . e($hotel->name) . ' ' . str_repeat('⭐', $hotel->star_rating) . '</p>';
-                $summaryHtml .= '<p class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>' . e($hotel->region->name ?? 'Unknown location') . '</p>';
-                $summaryHtml .= '<p class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' . Carbon::parse($this->checkIn)->format('d M Y') . ' - ' . Carbon::parse($this->checkOut)->format('d M Y') . ' (' . $nights . ' ' . ($nights === 1 ? 'night' : 'nights') . ')</p>';
-                $summaryHtml .= '<p class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>' . $this->adults . ' ' . ($this->adults === 1 ? 'Adult' : 'Adults');
-                if ($this->children > 0) {
-                    $summaryHtml .= ', ' . $this->children . ' ' . ($this->children === 1 ? 'Child' : 'Children');
-                }
-                $summaryHtml .= '</p>';
-                $summaryHtml .= '</div>';
-                
-                // Selected rooms
-                $summaryHtml .= '<div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">';
-                $summaryHtml .= '<p class="font-medium text-sm mb-2">Selected Rooms:</p>';
-                $summaryHtml .= '<ul class="space-y-1">';
-                foreach ($this->selectedRooms as $room) {
-                    $summaryHtml .= '<li class="text-sm flex items-center justify-between">';
-                    $summaryHtml .= '<span><span class="font-medium">' . e($room['room_name']) . '</span> - ' . e($room['board_type_name']) . '</span>';
-                    $summaryHtml .= '<span class="font-semibold">₺' . number_format($room['total_price'], 2) . '</span>';
-                    $summaryHtml .= '</li>';
-                }
-                $summaryHtml .= '</ul>';
-                $summaryHtml .= '</div>';
-            }
-            
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '</div>';
-            
             $schema[] = Forms\Components\Placeholder::make('selection_summary')
                 ->label('')
-                ->content(new HtmlString($summaryHtml));
+                ->content(fn () => view('booking::components.booking-wizard.selection-summary', [
+                    'hotel' => $this->getSelectedHotel(),
+                    'selectedRooms' => $this->selectedRooms,
+                    'checkIn' => $this->checkIn,
+                    'checkOut' => $this->checkOut,
+                    'nights' => $this->getNights(),
+                    'adults' => $this->adults,
+                    'children' => $this->children,
+                ]));
         }
         
         // Primary Guest with enhanced styling
@@ -646,154 +590,32 @@ class BookingWizardV3 extends Page implements HasForms
         $subtotal = array_sum(array_column($this->selectedRooms, 'total_price'));
         $airportTransferPrice = ($this->data['airport_transfer'] ?? false) ? 50 : 0;
         $travelInsurancePrice = ($this->data['travel_insurance'] ?? false) ? 25 : 0;
-        $totalPrice = $subtotal + $airportTransferPrice + $travelInsurancePrice;
-        
-        // Create comprehensive booking summary HTML
-        $summaryHtml = '<div class="summary-section">';
-        
-        // Hotel & Room Details
-        if ($hotel) {
-            $summaryHtml .= '<div class="booking-detail-card bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">';
-            $summaryHtml .= '<h3 class="text-lg font-semibold mb-4 flex items-center">';
-            $summaryHtml .= '<svg class="w-5 h-5 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
-            $summaryHtml .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />';
-            $summaryHtml .= '</svg>Accommodation Details</h3>';
-            
-            $summaryHtml .= '<div class="space-y-3">';
-            $summaryHtml .= '<div class="flex items-start">';
-            $summaryHtml .= '<div class="flex-1">';
-            $summaryHtml .= '<h4 class="font-semibold text-base">' . e($hotel->name) . ' ' . str_repeat('⭐', $hotel->star_rating) . '</h4>';
-            $summaryHtml .= '<p class="text-sm text-gray-600 dark:text-gray-400">' . e($hotel->region->name ?? 'Unknown location') . '</p>';
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '</div>';
-            
-            // Date and guest information
-            $summaryHtml .= '<div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">';
-            $summaryHtml .= '<div>';
-            $summaryHtml .= '<p class="text-sm text-gray-500 dark:text-gray-400">Check-in</p>';
-            $summaryHtml .= '<p class="font-medium">' . Carbon::parse($this->checkIn)->format('D, d M Y') . '</p>';
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '<div>';
-            $summaryHtml .= '<p class="text-sm text-gray-500 dark:text-gray-400">Check-out</p>';
-            $summaryHtml .= '<p class="font-medium">' . Carbon::parse($this->checkOut)->format('D, d M Y') . '</p>';
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '<div>';
-            $summaryHtml .= '<p class="text-sm text-gray-500 dark:text-gray-400">Duration</p>';
-            $summaryHtml .= '<p class="font-medium">' . $nights . ' ' . ($nights === 1 ? 'Night' : 'Nights') . '</p>';
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '<div>';
-            $summaryHtml .= '<p class="text-sm text-gray-500 dark:text-gray-400">Guests</p>';
-            $summaryHtml .= '<p class="font-medium">' . $this->adults . ' ' . ($this->adults === 1 ? 'Adult' : 'Adults');
-            if ($this->children > 0) {
-                $summaryHtml .= ', ' . $this->children . ' ' . ($this->children === 1 ? 'Child' : 'Children');
-            }
-            $summaryHtml .= '</p>';
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '</div>';
-            
-            // Room details
-            $summaryHtml .= '<div class="pt-3 border-t border-gray-200 dark:border-gray-700">';
-            $summaryHtml .= '<h5 class="font-medium mb-2">Selected Rooms</h5>';
-            foreach ($this->selectedRooms as $room) {
-                $summaryHtml .= '<div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3 mb-2">';
-                $summaryHtml .= '<div class="flex justify-between items-start">';
-                $summaryHtml .= '<div>';
-                $summaryHtml .= '<p class="font-medium">' . e($room['room_name']) . '</p>';
-                $summaryHtml .= '<p class="text-sm text-gray-600 dark:text-gray-400">' . e($room['board_type_name']) . '</p>';
-                if ($room['is_per_person'] ?? false) {
-                    $summaryHtml .= '<p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Price per person</p>';
-                }
-                $summaryHtml .= '</div>';
-                $summaryHtml .= '<div class="text-right">';
-                $summaryHtml .= '<p class="font-semibold">₺' . number_format($room['total_price'], 2) . '</p>';
-                $summaryHtml .= '<p class="text-xs text-gray-500">₺' . number_format($room['price_per_night'], 2) . '/night</p>';
-                $summaryHtml .= '</div>';
-                $summaryHtml .= '</div>';
-                $summaryHtml .= '</div>';
-            }
-            $summaryHtml .= '</div>';
-            
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '</div>';
-        }
-        
-        // Price Breakdown
-        $summaryHtml .= '<div class="price-breakdown-card bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">';
-        $summaryHtml .= '<h3 class="text-lg font-semibold mb-4 flex items-center">';
-        $summaryHtml .= '<svg class="w-5 h-5 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
-        $summaryHtml .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />';
-        $summaryHtml .= '</svg>Price Breakdown</h3>';
-        
-        $summaryHtml .= '<div class="space-y-2">';
-        
-        // Room subtotal
-        $summaryHtml .= '<div class="flex justify-between py-2">';
-        $summaryHtml .= '<span class="text-gray-600 dark:text-gray-400">Room Total (' . count($this->selectedRooms) . ' ' . (count($this->selectedRooms) === 1 ? 'room' : 'rooms') . ')</span>';
-        $summaryHtml .= '<span class="font-medium">₺' . number_format($subtotal, 2) . '</span>';
-        $summaryHtml .= '</div>';
-        
-        // Child pricing details if applicable
-        if ($this->children > 0 && !empty($this->childrenAges)) {
-            $summaryHtml .= '<div class="text-sm text-gray-500 dark:text-gray-500 italic pl-4">';
-            $summaryHtml .= 'Children ages: ' . implode(', ', array_map(fn($age) => $age . ' years', $this->childrenAges));
-            $summaryHtml .= '</div>';
-        }
-        
-        // Add-ons
-        if ($airportTransferPrice > 0) {
-            $summaryHtml .= '<div class="flex justify-between py-2">';
-            $summaryHtml .= '<span class="text-gray-600 dark:text-gray-400">Airport Transfer</span>';
-            $summaryHtml .= '<span class="font-medium">₺' . number_format($airportTransferPrice, 2) . '</span>';
-            $summaryHtml .= '</div>';
-        }
-        
-        if ($travelInsurancePrice > 0) {
-            $summaryHtml .= '<div class="flex justify-between py-2">';
-            $summaryHtml .= '<span class="text-gray-600 dark:text-gray-400">Travel Insurance</span>';
-            $summaryHtml .= '<span class="font-medium">₺' . number_format($travelInsurancePrice, 2) . '</span>';
-            $summaryHtml .= '</div>';
-        }
-        
-        // Total
-        $summaryHtml .= '<div class="flex justify-between pt-3 mt-3 border-t border-gray-200 dark:border-gray-700">';
-        $summaryHtml .= '<span class="text-lg font-semibold">Total Amount</span>';
-        $summaryHtml .= '<span class="text-lg font-semibold text-primary-600">₺' . number_format($totalPrice, 2) . '</span>';
-        $summaryHtml .= '</div>';
-        
-        $summaryHtml .= '</div>';
-        $summaryHtml .= '</div>';
-        
-        // Guest Information Summary
-        if (!empty($this->data['guest'][0])) {
-            $summaryHtml .= '<div class="booking-detail-card bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">';
-            $summaryHtml .= '<h3 class="text-lg font-semibold mb-4 flex items-center">';
-            $summaryHtml .= '<svg class="w-5 h-5 mr-2 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
-            $summaryHtml .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />';
-            $summaryHtml .= '</svg>Guest Information</h3>';
-            
-            $summaryHtml .= '<div class="space-y-2">';
-            $summaryHtml .= '<p><span class="text-gray-500 dark:text-gray-400">Primary Guest:</span> <span class="font-medium">' . e($this->data['guest'][0]['first_name'] ?? '') . ' ' . e($this->data['guest'][0]['last_name'] ?? '') . '</span></p>';
-            $summaryHtml .= '<p><span class="text-gray-500 dark:text-gray-400">Email:</span> <span class="font-medium">' . e($this->data['guest'][0]['email'] ?? '') . '</span></p>';
-            $summaryHtml .= '<p><span class="text-gray-500 dark:text-gray-400">Phone:</span> <span class="font-medium">' . e($this->data['guest'][0]['phone'] ?? '') . '</span></p>';
-            
-            if (!empty($this->data['special_requests'])) {
-                $summaryHtml .= '<div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">';
-                $summaryHtml .= '<p class="text-gray-500 dark:text-gray-400 mb-1">Special Requests:</p>';
-                $summaryHtml .= '<p class="text-sm italic">' . e($this->data['special_requests']) . '</p>';
-                $summaryHtml .= '</div>';
-            }
-            
-            $summaryHtml .= '</div>';
-            $summaryHtml .= '</div>';
-        }
-        
-        $summaryHtml .= '</div>';
+        $taxes = $subtotal * 0.18; // %18 KDV
+        $discount = 0; // TODO: Implement discount logic
+        $totalPrice = $subtotal + $airportTransferPrice + $travelInsurancePrice + $taxes - $discount;
         
         return [
             // Comprehensive Booking Summary
             Forms\Components\Placeholder::make('comprehensive_booking_summary')
                 ->label('')
-                ->content(new HtmlString($summaryHtml))
+                ->content(fn () => view('booking::components.booking-wizard.payment-summary', [
+                    'hotel' => $hotel,
+                    'selectedRooms' => $this->selectedRooms,
+                    'checkIn' => $this->checkIn,
+                    'checkOut' => $this->checkOut,
+                    'nights' => $nights,
+                    'adults' => $this->adults,
+                    'children' => $this->children,
+                    'childrenAges' => $this->childrenAges,
+                    'subtotal' => $subtotal,
+                    'airportTransferPrice' => $airportTransferPrice,
+                    'travelInsurancePrice' => $travelInsurancePrice,
+                    'discount' => $discount,
+                    'taxes' => $taxes,
+                    'totalPrice' => $totalPrice,
+                    'guest' => $this->data['guest'][0] ?? [],
+                    'specialRequests' => $this->data['special_requests'] ?? null,
+                ]))
                 ->columnSpanFull(),
                 
             // Payment Method with Visual Selection
@@ -803,9 +625,9 @@ class BookingWizardV3 extends Page implements HasForms
                     Forms\Components\Radio::make('payment_method')
                         ->label('How would you like to pay?')
                         ->options([
-                            'credit_card' => new HtmlString('<div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>Credit/Debit Card</div>'),
-                            'bank_transfer' => new HtmlString('<div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>Bank Transfer</div>'),
-                            'pay_at_hotel' => new HtmlString('<div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>Pay at Hotel</div>'),
+                            'credit_card' => 'Credit/Debit Card',
+                            'bank_transfer' => 'Bank Transfer',
+                            'pay_at_hotel' => 'Pay at Hotel',
                         ])
                         ->default('credit_card')
                         ->required()
@@ -853,56 +675,26 @@ class BookingWizardV3 extends Page implements HasForms
                                     
                                 Forms\Components\Placeholder::make('security_info')
                                     ->label('')
-                                    ->content(new HtmlString('<div class="flex items-center text-sm text-gray-500"><svg class="w-4 h-4 mr-1 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>Secure SSL Encryption</div>')),
+                                    ->content(fn () => view('booking::components.booking-wizard.security-info')),
                             ]),
                             
                         // Accepted cards display
                         Forms\Components\Placeholder::make('accepted_cards')
                             ->label('')
-                            ->content(new HtmlString('
-                                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm text-gray-500 mb-2">We accept:</p>
-                                    <div class="flex space-x-3">
-                                        <img src="/images/payment/visa.svg" alt="Visa" class="h-8">
-                                        <img src="/images/payment/mastercard.svg" alt="Mastercard" class="h-8">
-                                        <img src="/images/payment/paypal.svg" alt="PayPal" class="h-8">
-                                        <img src="/images/payment/apple-pay.svg" alt="Apple Pay" class="h-8">
-                                    </div>
-                                </div>
-                            ')),
+                            ->content(fn () => view('booking::components.booking-wizard.accepted-cards')),
                     ])
                     ->visible(fn (Get $get) => $get('payment_method') === 'credit_card'),
                     
                     // Bank Transfer Info
                     Forms\Components\Placeholder::make('bank_transfer_info')
                         ->label('')
-                        ->content(new HtmlString('
-                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
-                                <h4 class="font-medium text-blue-900 dark:text-blue-100 mb-2">Bank Transfer Instructions</h4>
-                                <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">After completing your booking, you\'ll receive bank details via email. Please transfer the total amount within 24 hours to confirm your reservation.</p>
-                                <div class="bg-white dark:bg-gray-800 rounded p-3 space-y-1">
-                                    <p class="text-sm"><span class="font-medium">Bank:</span> Tourism Bank</p>
-                                    <p class="text-sm"><span class="font-medium">Account Name:</span> TMS Tourism Ltd.</p>
-                                    <p class="text-sm"><span class="font-medium">Reference:</span> Will be provided after booking</p>
-                                </div>
-                            </div>
-                        '))
+                        ->content(fn () => view('booking::components.booking-wizard.bank-transfer-info'))
                         ->visible(fn (Get $get) => $get('payment_method') === 'bank_transfer'),
                         
                     // Pay at Hotel Info
                     Forms\Components\Placeholder::make('pay_at_hotel_info')
                         ->label('')
-                        ->content(new HtmlString('
-                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mt-4">
-                                <h4 class="font-medium text-green-900 dark:text-green-100 mb-2">Pay at Hotel</h4>
-                                <p class="text-sm text-green-700 dark:text-green-300">No payment required now! Your booking will be confirmed immediately and you can pay directly at the hotel during check-in.</p>
-                                <ul class="mt-3 space-y-1 text-sm text-green-600 dark:text-green-400">
-                                    <li class="flex items-start"><svg class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Free cancellation until 24 hours before check-in</li>
-                                    <li class="flex items-start"><svg class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Pay with cash or card at the hotel</li>
-                                    <li class="flex items-start"><svg class="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Instant booking confirmation</li>
-                                </ul>
-                            </div>
-                        '))
+                        ->content(fn () => view('booking::components.booking-wizard.pay-at-hotel-info'))
                         ->visible(fn (Get $get) => $get('payment_method') === 'pay_at_hotel'),
                 ]),
                 
@@ -912,46 +704,9 @@ class BookingWizardV3 extends Page implements HasForms
                     // Cancellation Policy
                     Forms\Components\Placeholder::make('cancellation_policy')
                         ->label('')
-                        ->content(function() use ($hotel) {
-                            $html = '<div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">';
-                            $html .= '<h4 class="font-medium text-amber-900 dark:text-amber-100 mb-2 flex items-center">';
-                            $html .= '<svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
-                            $html .= 'Cancellation Policy</h4>';
-                            
-                            if ($hotel && $hotel->refund_policy_type) {
-                                $html .= '<div class="text-sm text-amber-700 dark:text-amber-300 space-y-2">';
-                                
-                                switch($hotel->refund_policy_type) {
-                                    case 'flexible':
-                                        $html .= '<p>✓ Free cancellation up to 24 hours before check-in</p>';
-                                        $html .= '<p>✓ Full refund if cancelled within the free cancellation period</p>';
-                                        break;
-                                    case 'moderate':
-                                        $html .= '<p>⚠ Free cancellation up to 7 days before check-in</p>';
-                                        $html .= '<p>⚠ 50% refund if cancelled 3-7 days before check-in</p>';
-                                        $html .= '<p>⚠ No refund if cancelled less than 3 days before check-in</p>';
-                                        break;
-                                    case 'strict':
-                                        $html .= '<p>❌ Free cancellation up to 14 days before check-in</p>';
-                                        $html .= '<p>❌ 50% refund if cancelled 7-14 days before check-in</p>';
-                                        $html .= '<p>❌ No refund if cancelled less than 7 days before check-in</p>';
-                                        break;
-                                    case 'non_refundable':
-                                        $html .= '<p>❌ This is a non-refundable booking</p>';
-                                        $html .= '<p>❌ No refund will be provided for cancellations</p>';
-                                        $html .= '<p class="font-medium">💰 Save ' . ($hotel->non_refundable_discount ?? 10) . '% with this non-refundable rate</p>';
-                                        break;
-                                }
-                                
-                                $html .= '</div>';
-                            } else {
-                                $html .= '<p class="text-sm text-amber-700 dark:text-amber-300">Standard cancellation policy applies. Please contact the hotel for details.</p>';
-                            }
-                            
-                            $html .= '</div>';
-                            
-                            return new HtmlString($html);
-                        }),
+                        ->content(fn () => view('booking::components.booking-wizard.cancellation-policy', [
+                            'hotel' => $hotel
+                        ])),
                         
                     Forms\Components\Checkbox::make('accept_terms')
                         ->label('I accept the terms and conditions and cancellation policy')
