@@ -141,18 +141,13 @@ class BoardTypeSeeder extends Seeder
 
         foreach ($boardTypes as $boardType) {
             try {
-                // Convert arrays to JSON strings for storage
-                $data = $boardType;
-                $data['includes'] = json_encode($boardType['includes']);
-                $data['excludes'] = json_encode($boardType['excludes']);
-
                 // Check if exists
                 $existing = BoardType::where('code', $boardType['code'])->first();
 
                 if ($existing) {
                     $this->command->info("Board type with code {$boardType['code']} already exists. Skipping...");
                 } else {
-                    BoardType::create($data);
+                    BoardType::create($boardType);
                     $count++;
                     $this->command->info("Created board type: {$boardType['name']} ({$boardType['code']})");
                 }
@@ -167,5 +162,4 @@ class BoardTypeSeeder extends Seeder
 
         $this->command->info("Board type seeding completed: {$count} new board types created.");
     }
-}
 }

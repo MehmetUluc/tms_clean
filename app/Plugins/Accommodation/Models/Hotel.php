@@ -72,6 +72,11 @@ class Hotel extends BaseModel
         'amenities',
         'policies',
         'check_in_out',
+        'child_policies',
+        'max_children_per_room',
+        'child_age_limit',
+        'children_stay_free',
+        'child_policy_description',
         'cover_image',
         'gallery',
         'meta_title',
@@ -118,6 +123,10 @@ class Hotel extends BaseModel
         'policies' => '[]',
         'gallery' => '[]',
         'check_in_out' => '{"check_in_from":"14:00","check_in_until":"23:59","check_out_from":"07:00","check_out_until":"12:00"}',
+        'child_policies' => '[]',
+        'max_children_per_room' => 2,
+        'child_age_limit' => 12,
+        'children_stay_free' => false,
     ];
 
     /**
@@ -183,6 +192,38 @@ class Hotel extends BaseModel
         } else {
             $this->attributes['check_in_out'] = json_encode($value ?: $default);
         }
+    }
+    
+    /**
+     * Get minimum price from daily rates
+     */
+    public function getMinPriceAttribute()
+    {
+        // Get minimum price from daily rates through rate plans
+        $minPrice = $this->rooms()
+            ->join('rate_plans', 'rooms.id', '=', 'rate_plans.room_id')
+            ->join('daily_rates', 'rate_plans.id', '=', 'daily_rates.rate_plan_id')
+            ->where('daily_rates.date', '>=', now()->toDateString())
+            ->where('daily_rates.is_closed', false)
+            ->min('daily_rates.base_price');
+            
+        return $minPrice ?? 500; // Default to 500 if no rates found
+    }
+    
+    /**
+     * Child policies accessor
+     */
+    public function getChildPoliciesAttribute($value)
+    {
+        return json_decode($value ?: '[]', true);
+    }
+    
+    /**
+     * Child policies mutator
+     */
+    public function setChildPoliciesAttribute($value)
+    {
+        $this->attributes['child_policies'] = is_string($value) ? $value : json_encode($value ?: []);
     }
 
     /**

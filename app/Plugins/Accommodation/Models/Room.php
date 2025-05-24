@@ -17,6 +17,8 @@ use App\Plugins\Booking\Models\Guest;
 use App\Plugins\Pricing\Models\RoomRate;
 use App\Plugins\Pricing\Models\PriceRule;
 use App\Plugins\Pricing\Models\RoomInventory;
+use App\Plugins\Pricing\Models\RatePlan;
+use App\Models\User;
 
 class Room extends Model
 {
@@ -48,7 +50,12 @@ class Room extends Model
         'size', // Metrekare (genellikle oda tipinden gelir)
         'base_price', // NOT: Bu sadece referans fiyatıdır. Gerçek fiyatlar RoomRate tablosundan gelir
         'pricing_calculation_method', // Fiyatlandırma hesaplama metodu: per_person (kişi başı) veya per_room (oda başı/unit)
-        'child_policies', // Çocuk yaş ve fiyat politikaları (JSON)
+        'child_policies', // Çocuk yaş ve fiyat politikaları (JSON) - LEGACY
+        'override_child_policy', // Otel politikasını ezme
+        'custom_child_policies', // Özel çocuk politikaları
+        'custom_max_children', // Özel maksimum çocuk sayısı
+        'custom_child_age_limit', // Özel çocuk yaş limiti
+        'child_policy_note', // Çocuk politikası notu
         'is_active', // Oda aktif mi?
         'is_available', // Oda müsait mi? NOT: Gerçek müsaitlik RoomInventory tablosundan kontrol edilir
         'is_featured', // Öne çıkan oda mı?
@@ -64,7 +71,11 @@ class Room extends Model
         'size' => 'decimal:2',
         'base_price' => 'decimal:2',
         'child_policies' => 'array',
+        'custom_child_policies' => 'array',
         'features_details' => 'array',
+        'override_child_policy' => 'boolean',
+        'custom_max_children' => 'integer',
+        'custom_child_age_limit' => 'integer',
         'is_active' => 'boolean',
         'is_available' => 'boolean',
         'is_featured' => 'boolean',
@@ -218,6 +229,14 @@ class Room extends Model
     }
 
     /**
+     * Odanın rate plan'ları
+     */
+    public function ratePlans(): HasMany
+    {
+        return $this->hasMany(RatePlan::class);
+    }
+
+    /**
      * Oluşturan kullanıcı ilişkisi
      */
     public function creator(): BelongsTo
@@ -231,5 +250,57 @@ class Room extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Geçerli çocuk politikasını döndürür (override varsa onu, yoksa otelden miras alır)
+     */
+    public function getEffectiveChildPoliciesAttribute(): array
+    {
+        if ($this->override_child_policy && $this->custom_child_policies) {
+            return $this->custom_child_policies;
+        }
+        
+        return $this->hotel->child_policies ?? [];
+    }
+
+    /**
+     * Geçerli maksimum çocuk sayısını döndürür
+     */
+    public function getEffectiveMaxChildrenAttribute(): int
+    {
+        if ($this->override_child_policy && $this->custom_max_children !== null) {
+            return $this->custom_max_children;
+        }
+        
+        return $this->hotel->max_children_per_room ?? 2;
+    }
+
+    /**
+     * Geçerli çocuk yaş limitini döndürür
+     */
+    public function getEffectiveChildAgeLimitAttribute(): int
+    {
+        if ($this->override_child_policy && $this->custom_child_age_limit !== null) {
+            return $this->custom_child_age_limit;
+        }
+        
+        return $this->hotel->child_age_limit ?? 12;
+    }
+
+    /**
+     * Çocuk politikası notunu döndürür
+     */
+    public function getChildPolicyDisplayAttribute(): string
+    {
+        $note = '';
+        
+        if ($this->override_child_policy) {
+            $note = $this->child_policy_note ?? 'Bu oda için özel çocuk politikası uygulanmaktadır.';
+        } else {
+            $note = $this->hotel->child_policy_description ?? 'Otel geneli çocuk politikası uygulanmaktadır.';
+        }
+        
+        return $note;
     }
 }

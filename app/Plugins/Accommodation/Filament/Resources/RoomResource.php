@@ -286,74 +286,142 @@ class RoomResource extends Resource
                             ->icon('heroicon-o-face-smile')
                             ->badge(fn () => 'Fiyatlandırma')
                             ->schema([
-                                Forms\Components\Section::make('Çocuk Yaş Politikaları')
-                                    ->description('Çocuklar için yaşa göre fiyatlandırma kurallarını belirleyin')
-                                    ->icon('heroicon-o-currency-dollar')
+                                Forms\Components\Section::make('Çocuk Politikası Ayarları')
+                                    ->description('Bu oda için çocuk politikası ayarlarını yapın')
+                                    ->icon('heroicon-o-adjustments-horizontal')
                                     ->schema([
-                                        Forms\Components\Repeater::make('child_policies')
+                                        Forms\Components\Toggle::make('override_child_policy')
+                                            ->label('Özel Çocuk Politikası Kullan')
+                                            ->helperText('Bu seçenek işaretlenirse, oda için özel çocuk politikası tanımlayabilirsiniz. Aksi halde otel geneli politika geçerli olur.')
+                                            ->reactive()
+                                            ->afterStateUpdated(fn ($state, Forms\Set $set) => !$state ? $set('custom_child_policies', []) : null),
+                                    ]),
+                                    
+                                Forms\Components\Section::make('Mevcut Otel Politikası')
+                                    ->description(fn ($record) => $record?->hotel?->child_policy_description ?? 'Otel geneli çocuk politikası tanımlanmamış.')
+                                    ->hidden(fn (Forms\Get $get): bool => $get('override_child_policy') === true)
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('hotel_policy')
+                                            ->content(function ($record) {
+                                                if (!$record || !$record->hotel) {
+                                                    return 'Otel bilgisi bulunamadı.';
+                                                }
+                                                
+                                                $hotel = $record->hotel;
+                                                $policies = [];
+                                                
+                                                $policies[] = "Max Çocuk: {$hotel->max_children_per_room}";
+                                                $policies[] = "Yaş Limiti: {$hotel->child_age_limit}";
+                                                $policies[] = $hotel->children_stay_free ? "Çocuklar ücretsiz" : "Çocuklar ücretli";
+                                                
+                                                if ($hotel->child_policies && count($hotel->child_policies) > 0) {
+                                                    $policies[] = "\n\nYaş Grupları:";
+                                                    foreach ($hotel->child_policies as $policy) {
+                                                        $desc = "{$policy['age_from']}-{$policy['age_to']} yaş: ";
+                                                        if ($policy['price_type'] === 'free') {
+                                                            $desc .= "Ücretsiz";
+                                                        } elseif ($policy['price_type'] === 'percentage') {
+                                                            $desc .= "%{$policy['price_value']} indirim";
+                                                        } else {
+                                                            $desc .= "{$policy['price_value']} ₺";
+                                                        }
+                                                        $policies[] = $desc;
+                                                    }
+                                                }
+                                                
+                                                return implode("\n", $policies);
+                                            }),
+                                    ]),
+                                    
+                                Forms\Components\Section::make('Özel Çocuk Politikası')
+                                    ->description('Bu oda için özel çocuk politikası tanımlayın')
+                                    ->hidden(fn (Forms\Get $get): bool => $get('override_child_policy') !== true)
+                                    ->schema([
+                                        Forms\Components\Grid::make()
+                                            ->schema([
+                                                Forms\Components\TextInput::make('custom_max_children')
+                                                    ->label('Maksimum Çocuk Sayısı')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->maxValue(5)
+                                                    ->helperText('Bu oda için maksimum çocuk sayısı'),
+                                                    
+                                                Forms\Components\TextInput::make('custom_child_age_limit')
+                                                    ->label('Çocuk Yaş Sınırı')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->maxValue(18)
+                                                    ->helperText('Kaç yaşına kadar çocuk sayılacağı'),
+                                            ])
+                                            ->columns(2),
+                                            
+                                        Forms\Components\Textarea::make('child_policy_note')
+                                            ->label('Politika Notu')
+                                            ->rows(2)
+                                            ->helperText('Bu oda için özel notlar veya açıklamalar'),
+                                            
+                                        Forms\Components\Repeater::make('custom_child_policies')
                                             ->label('Çocuk Yaş Grupları')
                                             ->helperText('Her yaş grubu için fiyatlandırma politikasını belirleyin')
                                             ->default([])
                                             ->schema([
-                                                Forms\Components\Grid::make()
-                                                    ->schema([
-                                                        Forms\Components\TextInput::make('min_age')
-                                                            ->label('Minimum Yaş')
-                                                            ->placeholder('Örn: 0')
-                                                            ->helperText('Alt yaş sınırı')
-                                                            ->numeric()
-                                                            ->minValue(0)
-                                                            ->required()
-                                                            ->suffixIcon('heroicon-o-minus-small'),
-                                                            
-                                                        Forms\Components\TextInput::make('max_age')
-                                                            ->label('Maksimum Yaş')
-                                                            ->placeholder('Örn: 6')
-                                                            ->helperText('Üst yaş sınırı')
-                                                            ->numeric()
-                                                            ->minValue(0)
-                                                            ->required()
-                                                            ->suffixIcon('heroicon-o-plus-small'),
+                                                Forms\Components\TextInput::make('age_from')
+                                                    ->label('Başlangıç Yaşı')
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->minValue(0)
+                                                    ->required(),
+                                                    
+                                                Forms\Components\TextInput::make('age_to')
+                                                    ->label('Bitiş Yaşı')
+                                                    ->numeric()
+                                                    ->default(6)
+                                                    ->minValue(0)
+                                                    ->required(),
+                                                    
+                                                Forms\Components\Select::make('price_type')
+                                                    ->label('Fiyat Tipi')
+                                                    ->options([
+                                                        'free' => 'Ücretsiz',
+                                                        'percentage' => 'Yüzde İndirim',
+                                                        'fixed' => 'Sabit Ücret',
                                                     ])
-                                                    ->columns(2)
-                                                    ->columnSpan(1),
-                                                
-                                                Forms\Components\Grid::make()
-                                                    ->schema([
-                                                        Forms\Components\Select::make('policy_type')
-                                                            ->label('Politika Tipi')
-                                                            ->helperText('Bu yaş grubu için fiyat politikası')
-                                                            ->options([
-                                                                'free' => '🎁 Ücretsiz',
-                                                                'discount' => '🏷️ İndirimli',
-                                                                'full_price' => '💰 Tam Fiyat',
-                                                            ])
-                                                            ->required(),
-                                                            
-                                                        Forms\Components\TextInput::make('discount_percentage')
-                                                            ->label('İndirim Yüzdesi')
-                                                            ->placeholder('Örn: 50')
-                                                            ->helperText('İndirim oranını % olarak belirtin')
-                                                            ->numeric()
-                                                            ->minValue(0)
-                                                            ->maxValue(100)
-                                                            ->suffix('%')
-                                                            ->visible(fn (callable $get) => $get('policy_type') === 'discount')
-                                                            ->suffixIcon('heroicon-o-tag'),
-                                                    ])
-                                                    ->columns(2)
-                                                    ->columnSpan(1),
+                                                    ->default('free')
+                                                    ->required()
+                                                    ->reactive(),
+                                                    
+                                                Forms\Components\TextInput::make('price_value')
+                                                    ->label(fn (Forms\Get $get) => match($get('price_type')) {
+                                                        'percentage' => 'İndirim Yüzdesi',
+                                                        'fixed' => 'Sabit Ücret',
+                                                        default => 'Değer'
+                                                    })
+                                                    ->numeric()
+                                                    ->default(0)
+                                                    ->minValue(0)
+                                                    ->hidden(fn (Forms\Get $get): bool => $get('price_type') === 'free')
+                                                    ->suffix(fn (Forms\Get $get) => $get('price_type') === 'percentage' ? '%' : '₺'),
+                                                    
+                                                Forms\Components\TextInput::make('max_children')
+                                                    ->label('Max Çocuk')
+                                                    ->numeric()
+                                                    ->default(2)
+                                                    ->minValue(1)
+                                                    ->helperText('Bu yaş grubundan max kaç çocuk'),
+                                                    
+                                                Forms\Components\TextInput::make('description')
+                                                    ->label('Açıklama')
+                                                    ->placeholder('Örn: 0-6 yaş ücretsiz')
+                                                    ->columnSpan(2),
                                             ])
-                                            ->itemLabel(fn (array $state): ?string => ($state['min_age'] ?? '?') . '-' . ($state['max_age'] ?? '?') . ' yaş: ' . match($state['policy_type'] ?? null) {
-                                                'free' => 'Ücretsiz',
-                                                'discount' => sprintf('%%%s indirimli', $state['discount_percentage'] ?? '0'),
-                                                'full_price' => 'Tam fiyat',
-                                                default => 'Belirtilmemiş'
-                                            })
-                                            ->columns(2)
+                                            ->itemLabel(fn (array $state): ?string => isset($state['age_from'], $state['age_to']) 
+                                                ? "{$state['age_from']}-{$state['age_to']} yaş" 
+                                                : null)
+                                            ->columns(7)
                                             ->collapsible()
-                                            ->defaultItems(1)
-                                            ->reorderableWithButtons(),
+                                            ->defaultItems(0)
+                                            ->reorderable()
+                                            ->cloneable(),
                                     ]),
                             ]),
                             

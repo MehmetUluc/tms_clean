@@ -1,0 +1,908 @@
+<div class="space-y-6 hotel-selection-step">
+    <!-- Debug Info -->
+    @if(config('app.debug'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <strong>Debug Info:</strong><br>
+        Destination: {{ $destination ?? 'NULL' }}<br>
+        Total Hotels Found: {{ $hotels->total() }}<br>
+        Current Page Hotels: {{ $hotels->count() }}
+    </div>
+    @endif
+    
+    <!-- Enhanced Filters Top Bar -->
+    <div class="glass-card rounded-2xl p-6">
+        <div class="flex flex-wrap items-center gap-6">
+            <!-- Price Range Slider -->
+            <div class="flex-1 min-w-[340px]">
+                <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 block flex items-center gap-2">
+                    <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Price Range (per night)
+                </label>
+                
+                <!-- Simple Price Range -->
+                <div class="space-y-4">
+                    <!-- Display Values -->
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="price-tag-simple">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">From</span>
+                            <span class="text-lg font-bold text-gray-900 dark:text-gray-100">₺{{ number_format($filters['priceRange'][0]) }}</span>
+                        </div>
+                        <div class="flex-1 px-4">
+                            <div class="h-px bg-gradient-to-r from-gray-300 via-primary-400 to-gray-300 dark:from-gray-600 dark:via-primary-500 dark:to-gray-600"></div>
+                        </div>
+                        <div class="price-tag-simple text-right">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Up to</span>
+                            <span class="text-lg font-bold text-gray-900 dark:text-gray-100">₺{{ number_format($filters['priceRange'][1]) }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Min Price Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Minimum Price</span>
+                            <span wire:loading.class="opacity-50" wire:target="priceRange">₺{{ number_format($filters['priceRange'][0]) }}</span>
+                        </div>
+                        <input type="range" 
+                               wire:model.lazy="priceRange.0"
+                               min="0" 
+                               max="9900" 
+                               step="100"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-orange-500">
+                    </div>
+                    
+                    <!-- Max Price Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Maximum Price</span>
+                            <span wire:loading.class="opacity-50" wire:target="priceRange">₺{{ number_format($filters['priceRange'][1]) }}</span>
+                        </div>
+                        <input type="range" 
+                               wire:model.lazy="priceRange.1"
+                               min="100" 
+                               max="10000" 
+                               step="100"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-orange-500">
+                    </div>
+                    
+                    <!-- Quick Price Options -->
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" 
+                                wire:click="$set('priceRange', [0, 1000])"
+                                class="price-quick-option">
+                            Budget
+                        </button>
+                        <button type="button" 
+                                wire:click="$set('priceRange', [1000, 3000])"
+                                class="price-quick-option">
+                            Mid-range
+                        </button>
+                        <button type="button" 
+                                wire:click="$set('priceRange', [3000, 10000])"
+                                class="price-quick-option">
+                            Luxury
+                        </button>
+                        <button type="button" 
+                                wire:click="$set('priceRange', [0, 10000])"
+                                class="price-quick-option">
+                            All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Quick Filters -->
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Stars:</span>
+                @foreach([5, 4, 3] as $stars)
+                    <label class="star-filter-pill">
+                        <input type="checkbox" wire:model.live="starRatings" value="{{ $stars }}" class="sr-only">
+                        <span class="flex items-center gap-1">
+                            @for($i = 0; $i < $stars; $i++)
+                                <svg class="w-4 h-4 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            @endfor
+                        </span>
+                    </label>
+                @endforeach
+                
+                <div class="ml-4 sort-dropdown">
+                    <select wire:model.live="sortBy" class="form-select">
+                        <option value="recommended">⭐ Recommended</option>
+                        <option value="price_low">💰 Price: Low to High</option>
+                        <option value="price_high">💎 Price: High to Low</option>
+                        <option value="rating">🌟 Star Rating</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Results Header -->
+    <div class="flex justify-between items-center px-2">
+        <div>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                @if($hotels->total() > 0)
+                    <span class="bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                        {{ $hotels->total() }} Amazing Hotels
+                    </span>
+                @else
+                    <span class="text-gray-600 dark:text-gray-400">
+                        Searching for hotels...
+                    </span>
+                @endif
+            </h3>
+            @if($destination)
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    in {{ $destination }}
+                </p>
+            @endif
+        </div>
+        
+        @if(count($selectedRooms) > 0)
+            <div class="selected-rooms-summary">
+                <div class="flex items-center gap-2">
+                    <div class="pulse-dot"></div>
+                    <span class="font-semibold">{{ count($selectedRooms) }} room(s) selected</span>
+                </div>
+                <div class="text-xl font-bold mt-1">
+                    Total: ₺{{ number_format(array_sum(array_column($selectedRooms, 'total_price'))) }}
+                </div>
+            </div>
+        @endif
+    </div>
+    
+    <!-- Hotels List -->
+    <div class="space-y-6">
+        @forelse($hotels as $hotel)
+            <div class="hotel-card-modern group">
+                <div class="p-6">
+                    <div class="flex gap-6">
+                        <!-- Enhanced Hotel Image -->
+                        <div class="relative flex-shrink-0 w-72 h-52 rounded-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300">
+                            @if($hotel->cover_image_url)
+                                <img src="{{ $hotel->cover_image_url }}" 
+                                     alt="{{ $hotel->name }}"
+                                     class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full elegant-gradient flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="w-20 h-20 text-white/40 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                        <p class="text-white/60 text-sm mt-2">No Image</p>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            <!-- Overlay Tags -->
+                            <div class="absolute top-4 left-4 flex gap-2">
+                                @if($hotel->is_featured)
+                                    <span class="premium-badge">✨ Premium</span>
+                                @endif
+                                @if($hotel->discount_percentage)
+                                    <span class="discount-badge">-{{ $hotel->discount_percentage }}%</span>
+                                @endif
+                            </div>
+                            
+                            <!-- Rating Badge -->
+                            <div class="absolute bottom-4 right-4">
+                                <div class="rating-badge">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span class="font-semibold">{{ $hotel->rating ?? '4.5' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Hotel Info -->
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1 pr-4">
+                                    <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-primary-600 transition-colors">
+                                        {{ $hotel->name }}
+                                    </h3>
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <div class="flex items-center">
+                                            @for($i = 0; $i < $hotel->star_rating; $i++)
+                                                <svg class="w-5 h-5 text-yellow-400 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                </svg>
+                                            @endfor
+                                        </div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            </svg>
+                                            {{ $hotel->region->name ?? 'Unknown Location' }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Enhanced Amenities -->
+                                    @if($hotel->amenities && count($hotel->amenities) > 0)
+                                        <div class="flex flex-wrap gap-2 mt-4 mb-4">
+                                            @php
+                                                $hotelAmenities = is_array($hotel->amenities) ? collect($hotel->amenities) : $hotel->amenities;
+                                                $amenityIcons = [
+                                                    'WiFi' => '📶',
+                                                    'Pool' => '🏊',
+                                                    'Spa' => '💆',
+                                                    'Restaurant' => '🍽️',
+                                                    'Gym' => '💪',
+                                                    'Parking' => '🅿️'
+                                                ];
+                                            @endphp
+                                            @foreach($hotelAmenities->take(6) as $amenity)
+                                                @php
+                                                    $amenityName = is_object($amenity) ? $amenity->name : $amenity;
+                                                    $icon = $amenityIcons[$amenityName] ?? '✓';
+                                                @endphp
+                                                <span class="amenity-badge">
+                                                    {{ $icon }} {{ $amenityName }}
+                                                </span>
+                                            @endforeach
+                                            @if($hotelAmenities->count() > 6)
+                                                <span class="text-sm text-gray-500">+{{ $hotelAmenities->count() - 6 }} more</span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                    
+                                    <!-- Review Summary -->
+                                    <div class="flex items-center gap-4 text-sm">
+                                        <span class="text-green-600 dark:text-green-400 font-semibold">Excellent</span>
+                                        <span class="text-gray-500">{{ rand(80, 250) }} reviews</span>
+                                        <span class="text-gray-500">•</span>
+                                        <span class="text-gray-500">{{ rand(5, 20) }}% off today</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Enhanced Price Section -->
+                                <div class="text-right min-w-[150px]">
+                                    <div class="mb-4">
+                                        @if($hotel->original_price ?? null)
+                                            <p class="text-sm text-gray-500 line-through">₺{{ number_format($hotel->original_price) }}</p>
+                                        @endif
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">From</p>
+                                        <p class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                                            ₺{{ number_format($hotel->min_price ?? 500) }}
+                                        </p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">per night</p>
+                                    </div>
+                                    
+                                    <button type="button"
+                                            wire:click="$set('selectedHotelId', {{ $selectedHotelId === $hotel->id ? 'null' : $hotel->id }})"
+                                            class="modern-button-primary">
+                                        @if($selectedHotelId === $hotel->id)
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                            Hide Rooms
+                                        @else
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                            </svg>
+                                            View Rooms
+                                        @endif
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Rooms Section (Collapsible) -->
+                    @if($selectedHotelId === $hotel->id)
+                        <div class="mt-8 pt-8 border-t-2 border-gray-100 dark:border-gray-700"
+                             x-data="{ activeRoom: null }"
+                             x-init="$nextTick(() => { $el.scrollIntoView({ behavior: 'smooth', block: 'center' }) })">
+                            
+                            <h4 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                </svg>
+                                Available Rooms for {{ $nights }} {{ $nights === 1 ? 'night' : 'nights' }}
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                @foreach($hotel->rooms as $room)
+                                    @php
+                                        // Check if room has any bookable rate plans for the selected dates
+                                        $hasBookableRates = false;
+                                        $isSOR = false;
+                                        
+                                        // Check all rate plans for the room
+                                        foreach($room->ratePlans as $ratePlan) {
+                                            if (!$ratePlan->status) continue;
+                                            
+                                            $dailyRates = $ratePlan->dailyRates()
+                                                ->whereBetween('date', [$checkIn, $checkOut])
+                                                ->where('is_closed', false)
+                                                ->get();
+                                            
+                                            if ($dailyRates->count() > 0) {
+                                                // Check sales_type for all daily rates
+                                                $hasDirectSale = $dailyRates->contains('sales_type', 'direct');
+                                                $hasAskAvailability = $dailyRates->contains('sales_type', 'ask_sell');
+                                                $allInquireOnly = false; // inquire_only is mapped to ask_sell in the system
+                                                
+                                                if (!$allInquireOnly) {
+                                                    $hasBookableRates = true;
+                                                    if ($hasAskAvailability && !$hasDirectSale) {
+                                                        $isSOR = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Skip rooms with no bookable rates
+                                        if (!$hasBookableRates) {
+                                            continue;
+                                        }
+                                        
+                                        $availability = $inventoryService->checkAvailability($room->id, $checkIn, $checkOut);
+                                        $availableRooms = $availability['available_rooms'];
+                                        $isAvailable = $availability['is_available'];
+                                        $unavailableReason = $availability['reason'] ?? null;
+                                    @endphp
+                                    <div class="room-card-modern {{ !$isAvailable ? 'room-card-unavailable' : '' }} relative">
+                                        @if(!$isAvailable)
+                                            <div class="absolute inset-0 bg-gray-900/60 dark:bg-gray-900/80 rounded-2xl flex items-center justify-center z-10">
+                                                <div class="text-center text-white">
+                                                    <svg class="w-16 h-16 mx-auto mb-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                    </svg>
+                                                    <p class="text-lg font-semibold">Not Available</p>
+                                                    @if($unavailableReason)
+                                                        <p class="text-sm mt-1 opacity-80">{{ $unavailableReason }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="flex gap-4">
+                                            @if($room->cover_image_url)
+                                                <img src="{{ $room->cover_image_url }}" 
+                                                     alt="{{ $room->name }}"
+                                                     class="w-32 h-32 rounded-xl object-cover {{ !$isAvailable ? 'opacity-50' : '' }}">
+                                            @else
+                                                <div class="w-32 h-32 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center {{ !$isAvailable ? 'opacity-50' : '' }}">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <h5 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $room->name }}</h5>
+                                                </div>
+                                                <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                                    <span class="flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                                        </svg>
+                                                        Up to {{ $room->capacity_adults ?? 2 }} adults
+                                                        @if($room->capacity_children > 0)
+                                                            + {{ $room->capacity_children }} {{ $room->capacity_children === 1 ? 'child' : 'children' }}
+                                                        @endif
+                                                    </span>
+                                                    @if($room->size)
+                                                        <span class="flex items-center gap-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                                            </svg>
+                                                            {{ $room->size }}m²
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Enhanced Room Availability Indicator -->
+                                                @if($isAvailable)
+                                                    <div class="availability-indicator {{ $availableRooms <= 3 ? 'availability-low' : ($availableRooms >= 10 ? 'availability-good' : 'availability-medium') }} mb-3">
+                                                        @if($availableRooms <= 3)
+                                                            <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            <span class="font-semibold">Only {{ $availableRooms }} room{{ $availableRooms > 1 ? 's' : '' }} left!</span>
+                                                        @elseif($availableRooms >= 10)
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            <span>{{ $availableRooms }}+ rooms available</span>
+                                                        @else
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            <span>{{ $availableRooms }} rooms available</span>
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div class="availability-indicator availability-none mb-3">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                        </svg>
+                                                        <span class="font-semibold">
+                                                            @if($unavailableReason === 'sold_out')
+                                                                Sold out
+                                                            @else
+                                                                Not available
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                                
+                                                <!-- Child Policy Info -->
+                                                @if($hotel->child_policy && ($hotel->child_policy['free_age_limit'] ?? 0) > 0)
+                                                    <div class="text-xs text-green-600 dark:text-green-400 mb-2 flex items-center gap-1">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        Children under {{ $hotel->child_policy['free_age_limit'] }} stay free
+                                                    </div>
+                                                @endif
+                                                
+                                                <!-- Room Amenities -->
+                                                @if($room->amenities && count($room->amenities) > 0)
+                                                    <div class="flex flex-wrap gap-2 mb-4">
+                                                        @php
+                                                            $roomAmenities = is_array($room->amenities) ? collect($room->amenities) : $room->amenities;
+                                                        @endphp
+                                                        @foreach($roomAmenities->take(4) as $amenity)
+                                                            <span class="room-amenity-tag">
+                                                                {{ is_object($amenity) ? $amenity->name : $amenity }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Enhanced Rate Plans -->
+                                        <div class="mt-4 space-y-3">
+                                            @php
+                                                // Filter rate plans to only active ones with bookable daily rates
+                                                $availableRatePlans = $room->ratePlans->filter(function($ratePlan) use ($checkIn, $checkOut) {
+                                                    // Check if rate plan is active
+                                                    if (!$ratePlan->status) {
+                                                        return false;
+                                                    }
+                                                    
+                                                    // Check if daily rates exist for the date range
+                                                    $dailyRates = $ratePlan->dailyRates()
+                                                        ->whereBetween('date', [$checkIn, $checkOut])
+                                                        ->where('is_closed', false)
+                                                        ->get();
+                                                    
+                                                    if ($dailyRates->count() === 0) {
+                                                        return false;
+                                                    }
+                                                    
+                                                    // All rates should be bookable with 'direct' or 'ask_sell'
+                                                    $allInquireOnly = false; // inquire_only is mapped to ask_sell in the system
+                                                    
+                                                    return !$allInquireOnly;
+                                                });
+                                            @endphp
+                                            
+                                            @forelse($availableRatePlans as $ratePlan)
+                                                @php
+                                                    $isSelected = collect($selectedRooms)->contains(function ($item) use ($room, $ratePlan) {
+                                                        return $item['room_id'] == $room->id && $item['rate_plan_id'] == $ratePlan->id;
+                                                    });
+                                                    
+                                                    // Calculate price with child policy
+                                                    $dailyRates = $ratePlan->dailyRates()
+                                                        ->whereBetween('date', [$checkIn, $checkOut])
+                                                        ->where('is_closed', false)
+                                                        ->get();
+                                                    
+                                                    // Check if this rate plan has any ask_sell rates
+                                                    $ratePlanIsSOR = $dailyRates->contains('sales_type', 'ask_sell');
+                                                    
+                                                    $priceData = $component->getPriceForRatePlan($ratePlan, $dailyRates);
+                                                    $averagePrice = $priceData['average_price'];
+                                                    $totalPrice = $priceData['total_price'];
+                                                    $hasChildrenDiscount = $priceData['has_children_discount'];
+                                                    $childrenInfo = $priceData['children_info'];
+                                                    
+                                                    $boardType = $ratePlan->boardType;
+                                                @endphp
+                                                <div class="rate-plan-card {{ $isSelected ? 'selected' : '' }} {{ !$isAvailable ? 'opacity-60' : '' }}">
+                                                    <div class="flex flex-col">
+                                                        <!-- Header with icon and title -->
+                                                        <div class="flex items-start justify-between mb-3">
+                                                            <div class="flex items-center gap-3 flex-1">
+                                                                @if($boardType->icon)
+                                                                    @php
+                                                                        $iconMap = [
+                                                                            'cake' => '🍰',
+                                                                            'sparkles' => '✨',
+                                                                            'home' => '🏠',
+                                                                            'academic-cap' => '🎓',
+                                                                            'sun' => '☀️',
+                                                                        ];
+                                                                        $displayIcon = $iconMap[$boardType->icon] ?? '📋';
+                                                                    @endphp
+                                                                    <span class="text-2xl">{{ $displayIcon }}</span>
+                                                                @endif
+                                                                <div class="flex-1">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <h6 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                                            {{ $boardType->name }}
+                                                                        </h6>
+                                                                        @if($ratePlanIsSOR)
+                                                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100">
+                                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                                </svg>
+                                                                                On Request
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                    @if($boardType->description)
+                                                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                                                                            {{ $boardType->description }}
+                                                                        </p>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Price Display Section -->
+                                                            <div class="flex items-start gap-4 ml-4">
+                                                                <div class="text-right">
+                                                                    @if($averagePrice > 0)
+                                                                        <!-- Total Price Display -->
+                                                                        <div class="mb-2">
+                                                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total for {{ $nights }} nights</p>
+                                                                            <p class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                                                                                ₺{{ number_format($totalPrice) }}
+                                                                            </p>
+                                                                        </div>
+                                                                        
+                                                                        <!-- Price Breakdown -->
+                                                                        <div class="space-y-1 border-t border-gray-200 dark:border-gray-700 pt-2">
+                                                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                                                ₺{{ number_format($averagePrice) }} {{ $ratePlan->is_per_person ? 'per person' : 'per room' }}/night
+                                                                            </p>
+                                                                            
+                                                                            @if($hasChildrenDiscount && $childrenInfo)
+                                                                                <div class="text-xs space-y-0.5">
+                                                                                    @if($childrenInfo['free'] > 0)
+                                                                                        <p class="text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                                            </svg>
+                                                                                            {{ $childrenInfo['free'] }} child{{ $childrenInfo['free'] > 1 ? 'ren' : '' }} stay free
+                                                                                        </p>
+                                                                                    @endif
+                                                                                    @if($childrenInfo['discounted'] > 0)
+                                                                                        <p class="text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                                            </svg>
+                                                                                            {{ $childrenInfo['discounted'] }} child{{ $childrenInfo['discounted'] > 1 ? 'ren' : '' }} with discount
+                                                                                        </p>
+                                                                                    @endif
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                    @else
+                                                                        <p class="text-sm text-gray-500">Price on request</p>
+                                                                    @endif
+                                                                </div>
+                                                                
+                                                                <!-- Select Button -->
+                                                                @php
+                                                                    $sorData = [
+                                                                        'room_id' => $room->id,
+                                                                        'rate_plan_id' => $ratePlan->id,
+                                                                        'room_name' => $room->name,
+                                                                        'board_type' => $ratePlan->boardType->code,
+                                                                        'board_type_name' => $ratePlan->boardType->name,
+                                                                        'hotel_name' => $hotel->name
+                                                                    ];
+                                                                    
+                                                                    $roomData = [
+                                                                        'room_id' => $room->id,
+                                                                        'rate_plan_id' => $ratePlan->id,
+                                                                        'room_name' => $room->name,
+                                                                        'board_type' => $ratePlan->boardType->code,
+                                                                        'board_type_name' => $ratePlan->boardType->name,
+                                                                        'price_per_night' => $averagePrice,
+                                                                        'total_price' => $totalPrice,
+                                                                        'is_per_person' => $ratePlan->is_per_person,
+                                                                        'has_children_discount' => $hasChildrenDiscount,
+                                                                        'children_info' => $childrenInfo
+                                                                    ];
+                                                                    
+                                                                    // Find the index of the selected room if it exists
+                                                                    $selectedIndex = null;
+                                                                    if ($isSelected) {
+                                                                        foreach ($selectedRooms as $index => $item) {
+                                                                            if ($item['room_id'] == $room->id && $item['rate_plan_id'] == $ratePlan->id) {
+                                                                                $selectedIndex = $index;
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                <button type="button"
+                                                                        @if($ratePlanIsSOR)
+                                                                            wire:click="handleSaleOnRequest(@json($sorData))"
+                                                                            class="rate-plan-button sor-button {{ (!$isAvailable || $averagePrice <= 0) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                        @else
+                                                                            @if($isSelected)
+                                                                                wire:click="removeRoom({{ $selectedIndex }})"
+                                                                            @else
+                                                                                wire:click="addRoom(@json($roomData))"
+                                                                            @endif
+                                                                            class="rate-plan-button {{ $isSelected ? 'selected' : '' }} {{ (!$isAvailable || $averagePrice <= 0) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                        @endif
+                                                                        @if($averagePrice <= 0 || !$isAvailable) disabled @endif>
+                                                                    @if(!$isAvailable)
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                        </svg>
+                                                                        Not Available
+                                                                    @elseif($ratePlanIsSOR)
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                        </svg>
+                                                                        Request
+                                                                    @elseif($isSelected)
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                        </svg>
+                                                                        Selected
+                                                                    @else
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                                        </svg>
+                                                                        Select
+                                                                    @endif
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Content section -->
+                                                        <div>
+                                                            <!-- Board Type Includes -->
+                                                            @php
+                                                                $includes = is_array($boardType->includes) ? $boardType->includes : json_decode($boardType->includes ?? '[]', true);
+                                                            @endphp
+                                                            @if(!empty($includes))
+                                                                <div class="mb-3">
+                                                                    <p class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">What's Included:</p>
+                                                                    <div class="flex flex-wrap gap-1">
+                                                                        @foreach($includes as $include)
+                                                                            @if(is_array($include) && isset($include['item']))
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100" 
+                                                                                      @if(isset($include['description'])) title="{{ $include['description'] }}" @endif>
+                                                                                    ✓ {{ $include['item'] }}
+                                                                                </span>
+                                                                            @elseif(is_string($include))
+                                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                                                                    ✓ {{ $include }}
+                                                                                </span>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                            
+                                                            <!-- Pricing Type and Refund Info -->
+                                                            <div class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                                <span class="flex items-center gap-1">
+                                                                    {{ $ratePlan->is_per_person ? '👤 Per person' : '🏠 Per room' }}
+                                                                </span>
+                                                                @if($dailyRates->first())
+                                                                    <span class="flex items-center gap-1">
+                                                                        @if($dailyRates->first()->is_refundable)
+                                                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                            </svg>
+                                                                            Refundable
+                                                                        @else
+                                                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                            </svg>
+                                                                            Non-refundable
+                                                                        @endif
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+                                                            
+                                                            @if($isSOR)
+                                                                <div class="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1">
+                                                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                    </svg>
+                                                                    <span>Availability will be confirmed within 24 hours after your request</span>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Board Type Notes -->
+                                                    @if($boardType->notes)
+                                                        <div class="mt-3 p-2 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                                                            <svg class="inline-block w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            {{ $boardType->notes }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @empty
+                                                <div class="text-center py-6 text-gray-500 dark:text-gray-400">
+                                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    <p class="text-sm">No rates available for the selected dates</p>
+                                                    <p class="text-xs mt-1">Please try different dates or contact us for assistance</p>
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <!-- Enhanced No Results State -->
+            <div class="no-results-container">
+                <!-- Background Pattern -->
+                <div class="no-results-bg-pattern"></div>
+                
+                <div class="no-results-content">
+                    <!-- Elegant Sad Face with Better Design -->
+                    <div class="sad-face-wrapper">
+                        <div class="sad-face-elegant">
+                            <svg class="w-40 h-40" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Outer glow circle -->
+                                <circle cx="80" cy="80" r="75" stroke="url(#gradient1)" stroke-width="1" opacity="0.1"/>
+                                <circle cx="80" cy="80" r="70" stroke="url(#gradient1)" stroke-width="1" opacity="0.15"/>
+                                <circle cx="80" cy="80" r="65" stroke="url(#gradient1)" stroke-width="1" opacity="0.2"/>
+                                
+                                <!-- Main face circle -->
+                                <circle cx="80" cy="80" r="60" stroke="currentColor" stroke-width="2.5" opacity="0.3"/>
+                                
+                                <!-- Eyes -->
+                                <ellipse cx="55" cy="65" rx="4" ry="6" fill="currentColor" opacity="0.6"/>
+                                <ellipse cx="105" cy="65" rx="4" ry="6" fill="currentColor" opacity="0.6"/>
+                                
+                                <!-- Eyebrows -->
+                                <path d="M45 55 Q55 50 65 55" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                                <path d="M95 55 Q105 50 115 55" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                                
+                                <!-- Sad mouth -->
+                                <path d="M50 105 Q80 90 110 105" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+                                
+                                <!-- Animated tear drops -->
+                                <g class="tear-group">
+                                    <ellipse cx="55" cy="75" rx="3" ry="5" fill="url(#tearGradient)" opacity="0" class="tear-drop-1">
+                                        <animate attributeName="cy" from="75" to="110" dur="2.5s" repeatCount="indefinite"/>
+                                        <animate attributeName="opacity" values="0;0.6;0.6;0" dur="2.5s" repeatCount="indefinite"/>
+                                        <animateTransform attributeName="transform" type="scale" values="1,1;1,1.5;1,1" dur="2.5s" repeatCount="indefinite"/>
+                                    </ellipse>
+                                    <ellipse cx="105" cy="75" rx="3" ry="5" fill="url(#tearGradient)" opacity="0" class="tear-drop-2">
+                                        <animate attributeName="cy" from="75" to="110" dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+                                        <animate attributeName="opacity" values="0;0.6;0.6;0" dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+                                        <animateTransform attributeName="transform" type="scale" values="1,1;1,1.5;1,1" dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+                                    </ellipse>
+                                </g>
+                                
+                                <!-- Gradient definitions -->
+                                <defs>
+                                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(251,146,60);stop-opacity:0.5"/>
+                                        <stop offset="100%" style="stop-color:rgb(236,72,153);stop-opacity:0.5"/>
+                                    </linearGradient>
+                                    <linearGradient id="tearGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(59,130,246);stop-opacity:0.8"/>
+                                        <stop offset="100%" style="stop-color:rgb(147,197,253);stop-opacity:0.4"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        
+                        <!-- Decorative elements -->
+                        <div class="decorative-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-3xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent mt-8 mb-3">
+                        Oops! No Hotels Found
+                    </h3>
+                    <p class="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-lg mx-auto leading-relaxed">
+                        We couldn't find any hotels matching your search criteria. Don't worry, we have plenty of other options!
+                    </p>
+                    
+                    <!-- Enhanced Suggestions -->
+                    <div class="suggestions-wrapper">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wide">Try these quick fixes:</p>
+                        <div class="flex flex-wrap justify-center gap-3 mb-10">
+                            <button type="button" 
+                                    wire:click="$dispatch('previous-wizard-step')"
+                                    class="suggestion-pill-enhanced">
+                                <div class="suggestion-icon">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <span>Try different dates</span>
+                            </button>
+                            <button type="button" 
+                                    wire:click="$dispatch('previous-wizard-step')"
+                                    class="suggestion-pill-enhanced">
+                                <div class="suggestion-icon">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <span>Change location</span>
+                            </button>
+                            <button type="button" 
+                                    wire:click="$set('priceRange', [0, 10000])"
+                                    class="suggestion-pill-enhanced">
+                                <div class="suggestion-icon">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                    </svg>
+                                </div>
+                                <span>Reset filters</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Back Button -->
+                    <button type="button" 
+                            wire:click="$dispatch('previous-wizard-step')"
+                            class="back-button-enhanced group">
+                        <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span>Back to Search</span>
+                    </button>
+                </div>
+            </div>
+        @endforelse
+    </div>
+    
+    <!-- Pagination -->
+    @if($hotels->hasPages())
+        <div class="mt-6">
+            {{ $hotels->links() }}
+        </div>
+    @endif
+    
+    <!-- Continue Button (Fixed Bottom) -->
+    @if(count($selectedRooms) > 0)
+        <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 -mx-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ count($selectedRooms) }} room(s) selected</p>
+                    <p class="text-lg font-semibold">Total: ₺{{ number_format(array_sum(array_column($selectedRooms, 'total_price'))) }}</p>
+                </div>
+                <button type="button"
+                        wire:click="$dispatch('next-wizard-step')"
+                        class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                    Continue to Guest Details
+                </button>
+            </div>
+        </div>
+    @endif
+</div>

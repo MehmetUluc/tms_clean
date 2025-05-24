@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('xml_mappings', function (Blueprint $table) {
-            // Add format_type column with 'xml' as default value
-            $table->enum('format_type', ['xml', 'json'])->default('xml')->after('direction');
-        });
+        if (Schema::hasTable('xml_mappings') && !Schema::hasColumn('xml_mappings', 'format_type')) {
+            Schema::table('xml_mappings', function (Blueprint $table) {
+                // Add format_type column with 'xml' as default value
+                $table->enum('format_type', ['xml', 'json'])->default('xml')->after('direction');
+            });
+        }
     }
 
     /**

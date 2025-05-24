@@ -10,6 +10,8 @@ use App\Plugins\Pricing\Services\PricingService;
 use App\Plugins\Pricing\Services\PricingPeriodsService;
 use App\Plugins\Pricing\Services\DailyRateService;
 use App\Plugins\Pricing\Services\DiscountedPriceService;
+use App\Plugins\Pricing\Services\ChildPolicyPricingService;
+use App\Plugins\Pricing\Services\InventoryService;
 use App\Plugins\Pricing\Repositories\RatePlanRepository;
 use App\Plugins\Pricing\Repositories\RatePeriodRepository;
 use App\Plugins\Pricing\Repositories\RateExceptionRepository;
@@ -60,6 +62,16 @@ class PricingServiceProvider extends ServiceProvider
                 $app->make(PricingService::class),
                 $app->make(\App\Plugins\Discount\Contracts\DiscountServiceInterface::class)
             );
+        });
+
+        // Register the ChildPolicyPricingService
+        $this->app->singleton(ChildPolicyPricingService::class, function ($app) {
+            return new ChildPolicyPricingService();
+        });
+
+        // Register the InventoryService
+        $this->app->singleton(InventoryService::class, function ($app) {
+            return new InventoryService();
         });
     }
 

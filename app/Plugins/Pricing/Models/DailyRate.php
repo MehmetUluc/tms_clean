@@ -12,16 +12,18 @@ class DailyRate extends Model
     protected $fillable = [
         'rate_plan_id',
         'date',
-        'base_price',       // For unit-based pricing
+        'base_price',
         'currency',
-        'is_closed',        // If true, no reservations can be made for this day
-        'min_stay_arrival', // Minimum stay if arrival is on this day
-        'status',           // available, limited, sold_out
+        'is_closed',
+        'min_stay_arrival',
+        'inventory',
+        'status',
+        'is_per_person',
+        'prices_json',
+        'is_refundable',
+        'sales_type',
         'notes',
-        'is_per_person',    // true=per person pricing, false=unit pricing
-        'prices_json',      // JSON storing prices for different occupancy levels
-        'is_refundable',    // true=refundable, false=non-refundable
-        'sales_type',       // direct or ask_sell (Sor-Sat)
+        'tenant_id',
     ];
     
     protected $casts = [
@@ -29,6 +31,7 @@ class DailyRate extends Model
         'base_price' => 'decimal:2',
         'is_closed' => 'boolean',
         'min_stay_arrival' => 'integer',
+        'inventory' => 'integer',
         'is_per_person' => 'boolean',
         'prices_json' => 'json',
         'is_refundable' => 'boolean',

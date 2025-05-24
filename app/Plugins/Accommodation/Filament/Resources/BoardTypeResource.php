@@ -82,20 +82,34 @@ class BoardTypeResource extends Resource
                     
                 Forms\Components\Section::make('Dahil Olan ve Olmayan Öğeler')
                     ->schema([
-                        Forms\Components\KeyValue::make('includes')
+                        Forms\Components\Repeater::make('includes')
                             ->label('Dahil Olan Öğeler')
-                            ->keyLabel('Öğe')
-                            ->valueLabel('Açıklama')
-                            ->keyPlaceholder('Örn: Kahvaltı')
-                            ->valuePlaceholder('Örn: Açık büfe kahvaltı')
+                            ->schema([
+                                Forms\Components\TextInput::make('item')
+                                    ->label('Öğe')
+                                    ->required()
+                                    ->placeholder('Örn: Kahvaltı'),
+                                Forms\Components\TextInput::make('description')
+                                    ->label('Açıklama')
+                                    ->placeholder('Örn: Açık büfe kahvaltı'),
+                            ])
+                            ->columns(2)
+                            ->defaultItems(0)
                             ->columnSpan('full'),
                             
-                        Forms\Components\KeyValue::make('excludes')
+                        Forms\Components\Repeater::make('excludes')
                             ->label('Hariç Tutulan Öğeler')
-                            ->keyLabel('Öğe')
-                            ->valueLabel('Açıklama')
-                            ->keyPlaceholder('Örn: İçecekler')
-                            ->valuePlaceholder('Örn: Alkollü içecekler hariç')
+                            ->schema([
+                                Forms\Components\TextInput::make('item')
+                                    ->label('Öğe')
+                                    ->required()
+                                    ->placeholder('Örn: İçecekler'),
+                                Forms\Components\TextInput::make('description')
+                                    ->label('Açıklama')
+                                    ->placeholder('Örn: Alkollü içecekler hariç'),
+                            ])
+                            ->columns(2)
+                            ->defaultItems(0)
                             ->columnSpan('full'),
                     ])
                     ->columnSpan('full'),

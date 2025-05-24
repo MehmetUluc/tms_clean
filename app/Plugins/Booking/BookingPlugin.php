@@ -29,6 +29,7 @@ class BookingPlugin implements Plugin, PluginInterface
             ->pages([
                 \App\Plugins\Booking\Filament\Pages\BookingWizard::class,
                 \App\Plugins\Booking\Filament\Pages\BookingWizardV2::class,
+                \App\Plugins\Booking\Filament\Pages\BookingWizardV3::class,
             ])
             ->widgets([
                 Filament\Widgets\ReservationStats::class,

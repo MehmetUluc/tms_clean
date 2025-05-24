@@ -59,6 +59,14 @@ class RatePlan extends Model
     }
 
     /**
+     * Get the daily rates for the rate plan.
+     */
+    public function dailyRates(): HasMany
+    {
+        return $this->hasMany(DailyRate::class);
+    }
+
+    /**
      * Active rate plans.
      */
     public function scopeActive($query)
