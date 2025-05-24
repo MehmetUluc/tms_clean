@@ -10,7 +10,7 @@ use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Blade;
 use Filament\Support\Assets\Asset;
 use Filament\Support\Facades\FilamentAsset;
-use App\Plugins\Partner\Services\VendorService;
+use App\Plugins\Partner\Services\PartnerService;
 
 class PartnerServiceProvider extends ServiceProvider
 {
@@ -20,11 +20,11 @@ class PartnerServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Register the partner service
-        $this->app->singleton(VendorService::class);
+        $this->app->singleton(PartnerService::class);
 
         // Merge config
         $this->mergeConfigFrom(
-            __DIR__ . '/config/vendor.php', 'partner'
+            __DIR__ . '/config/partner.php', 'partner'
         );
     }
 

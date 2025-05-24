@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 use App\Plugins\Accommodation\Models\Hotel;
 use App\Plugins\Accommodation\Models\RoomType;
-use App\Plugins\Accommodation\Scopes\VendorRoomScope;
+use App\Plugins\Accommodation\Scopes\PartnerRoomScope;
 use App\Plugins\Amenities\Models\RoomAmenity;
 use App\Plugins\Booking\Models\Reservation;
 use App\Plugins\Booking\Models\Guest;
@@ -32,7 +32,7 @@ class Room extends Model
         parent::boot();
 
         // Vendor scope'u uygula - odalar için özel bir scope kullanıyoruz
-        static::addGlobalScope(new VendorRoomScope);
+        static::addGlobalScope(new PartnerRoomScope);
     }
 
     protected $fillable = [

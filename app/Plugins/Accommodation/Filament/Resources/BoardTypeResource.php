@@ -11,12 +11,18 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class BoardTypeResource extends Resource
 {
-    protected static ?string $model = BoardType::class;
+    use HasFilamentPermissions;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cake';
+    protected static ?string $viewAnyPermission = 'view_board_types';
+    protected static ?string $viewPermission = 'view_board_types';
+    protected static ?string $createPermission = 'create_board_types';
+    protected static ?string $updatePermission = 'update_board_types';
+    protected static ?string $deletePermission = 'delete_board_types';
+    protected static ?string $model = BoardType::class;protected static ?string $navigationIcon = 'heroicon-o-cake';
     
     protected static ?string $navigationGroup = 'Otel Yönetimi';
     

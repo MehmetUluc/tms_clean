@@ -12,9 +12,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Hash;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class UserResource extends Resource
 {
+    use HasFilamentPermissions;
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
@@ -22,26 +24,33 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Kullanıcılar';
     protected static ?int $navigationSort = 1;
 
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
-
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
+    // Permission properties
+    protected static ?string $viewAnyPermission = 'view_users';
+    protected static ?string $viewPermission = 'view_users';
+    protected static ?string $createPermission = 'create_users';
+    protected static ?string $updatePermission = 'update_users';
+    protected static ?string $deletePermission = 'delete_users';
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        // Kullanıcılar kendi hesaplarını düzenleyebilir veya admin her hesabı düzenleyebilir
+        // First check permission from trait
+        if (!parent::canEdit($record)) {
+            return false;
+        }
+        
+        // Additional logic: Users can edit their own accounts or admin can edit all accounts
         return auth()->id() === $record->id || auth()->id() === 1;
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        // Admin kullanıcı silinemez ve kullanıcılar kendi hesaplarını silemez
-        // Sadece adminler başka kullanıcıları silebilir
+        // First check permission from trait
+        if (!parent::canDelete($record)) {
+            return false;
+        }
+        
+        // Additional logic: Admin user cannot be deleted and users cannot delete their own accounts
+        // Only admins can delete other users
         return $record->id !== 1 && auth()->id() !== $record->id && auth()->id() === 1;
     }
 

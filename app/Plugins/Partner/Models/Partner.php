@@ -35,12 +35,25 @@ class Partner extends BaseModel
         'contract_start_date',
         'contract_end_date',
         'notes',
+        'onboarding_completed',
+        'onboarding_completed_at',
+        'agreement_accepted',
+        'agreement_accepted_at',
+        'tourism_certificate_number',
+        'tourism_certificate_valid_until',
+        'staff_user_ids',
     ];
 
     protected $casts = [
         'default_commission_rate' => 'decimal:2',
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
+        'onboarding_completed' => 'boolean',
+        'onboarding_completed_at' => 'datetime',
+        'agreement_accepted' => 'boolean',
+        'agreement_accepted_at' => 'datetime',
+        'tourism_certificate_valid_until' => 'date',
+        'staff_user_ids' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -140,5 +153,44 @@ class Partner extends BaseModel
     public function calculateNetAmount(float $amount): float
     {
         return $amount - $this->calculateCommission($amount);
+    }
+    
+    /**
+     * Get staff users associated with this partner.
+     */
+    public function staff()
+    {
+        return $this->belongsToMany(User::class, 'partner_staff', 'partner_id', 'user_id')
+                    ->withTimestamps();
+    }
+    
+    /**
+     * Check if user is staff member of this partner.
+     */
+    public function hasStaffMember(User $user): bool
+    {
+        return in_array($user->id, $this->staff_user_ids ?? []);
+    }
+    
+    /**
+     * Complete the onboarding process.
+     */
+    public function completeOnboarding(): void
+    {
+        $this->update([
+            'onboarding_completed' => true,
+            'onboarding_completed_at' => now(),
+        ]);
+    }
+    
+    /**
+     * Accept the agreement.
+     */
+    public function acceptAgreement(): void
+    {
+        $this->update([
+            'agreement_accepted' => true,
+            'agreement_accepted_at' => now(),
+        ]);
     }
 }

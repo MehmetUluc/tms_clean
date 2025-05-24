@@ -15,12 +15,18 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class RoomAmenityResource extends Resource
 {
-    protected static ?string $model = RoomAmenity::class;
+    use HasFilamentPermissions;
 
-    protected static ?string $modelLabel = 'Oda Özelliği';
+    protected static ?string $viewAnyPermission = 'view_amenities';
+    protected static ?string $viewPermission = 'view_amenities';
+    protected static ?string $createPermission = 'create_amenities';
+    protected static ?string $updatePermission = 'update_amenities';
+    protected static ?string $deletePermission = 'delete_amenities';
+    protected static ?string $model = RoomAmenity::class;protected static ?string $modelLabel = 'Oda Özelliği';
     protected static ?string $pluralModelLabel = 'Oda Özellikleri';
     protected static ?string $navigationLabel = 'Oda Özellikleri';
 
@@ -29,26 +35,6 @@ class RoomAmenityResource extends Resource
     protected static ?string $navigationGroup = 'Oda Yönetimi';
     
     protected static ?int $navigationSort = 10;
-    
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
-    
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
-    
-    public static function canEdit(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin düzenlemesine izin ver
-    }
-    
-    public static function canDelete(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin silmesine izin ver
-    }
 
     public static function form(Form $form): Form
     {

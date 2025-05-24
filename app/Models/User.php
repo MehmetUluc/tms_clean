@@ -91,4 +91,55 @@ class User extends Authenticatable
         
         return false;
     }
+    
+    /**
+     * Check if user is partner
+     * 
+     * @return bool
+     */
+    public function isPartner(): bool
+    {
+        return $this->hasRole('partner');
+    }
+    
+    /**
+     * Check if user is partner staff
+     * 
+     * @return bool
+     */
+    public function isPartnerStaff(): bool
+    {
+        return $this->hasRole('partner_staff');
+    }
+    
+    /**
+     * Get the partner record associated with this user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function partner()
+    {
+        return $this->hasOne(\App\Plugins\Partner\Models\Partner::class);
+    }
+    
+    /**
+     * Get the partner this user belongs to (for staff)
+     * 
+     * @return \App\Plugins\Partner\Models\Partner|null
+     */
+    public function getPartnerAttribute()
+    {
+        if ($this->isPartner()) {
+            return $this->partner()->first();
+        }
+        
+        if ($this->isPartnerStaff()) {
+            // Find partner through staff relationship
+            return \App\Plugins\Partner\Models\Partner::whereHas('staff', function ($query) {
+                $query->where('user_id', $this->id);
+            })->first();
+        }
+        
+        return null;
+    }
 }

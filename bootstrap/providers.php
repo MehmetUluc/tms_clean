@@ -21,6 +21,10 @@ return [
     
     // B2C Tema sağlayıcısı kaldırıldı
     
-    // Filament panel sağlayıcısı - Plugin kaynaklarının yüklenmesinden sonra
+    // Partner Plugin
+    App\Plugins\Partner\PartnerServiceProvider::class,
+    
+    // Filament panel sağlayıcıları - Plugin kaynaklarının yüklenmesinden sonra
     App\Providers\Filament\AdminPanelProvider::class,
+    App\Providers\Filament\PartnerPanelProvider::class,
 ];

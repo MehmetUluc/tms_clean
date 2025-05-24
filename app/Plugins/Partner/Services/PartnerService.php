@@ -391,6 +391,14 @@ class PartnerService
     }
 
     /**
+     * Get partner for a user.
+     */
+    public function getPartnerForUser(User $user): ?Partner
+    {
+        return Partner::where('user_id', $user->id)->first();
+    }
+    
+    /**
      * Get partner financial summary.
      */
     public function getFinancialSummary(Partner $partner, ?string $startDate = null, ?string $endDate = null): array
@@ -464,18 +472,6 @@ class PartnerService
     public function isPartner(User $user): bool
     {
         return $user->hasRole('partner');
-    }
-
-    /**
-     * Get the partner for a user.
-     */
-    public function getPartnerForUser(User $user): ?Partner
-    {
-        if (!$this->isPartner($user)) {
-            return null;
-        }
-        
-        return Partner::where('user_id', $user->id)->first();
     }
     
     /**

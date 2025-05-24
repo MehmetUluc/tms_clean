@@ -11,9 +11,11 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class RatePlanResource extends Resource
 {
+    use HasFilamentPermissions;
     protected static ?string $model = RatePlan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
@@ -22,6 +24,13 @@ class RatePlanResource extends Resource
     protected static ?string $modelLabel = 'Tarife Planı';
     protected static ?string $pluralModelLabel = 'Tarife Planları';
     protected static ?int $navigationSort = 5;
+    
+    // Permission properties
+    protected static ?string $viewAnyPermission = 'view_rate_plans';
+    protected static ?string $viewPermission = 'view_rate_plans';
+    protected static ?string $createPermission = 'create_rate_plans';
+    protected static ?string $updatePermission = 'update_rate_plans';
+    protected static ?string $deletePermission = 'delete_rate_plans';
     
     public static function getGloballySearchableAttributes(): array
     {

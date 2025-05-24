@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Plugins\Core\src\Models\BaseModel;
-use App\Plugins\Accommodation\Scopes\VendorScope;
+use App\Plugins\Accommodation\Scopes\PartnerScope;
 use App\Models\User;
 use App\Plugins\Accommodation\Models\HotelTag;
 use App\Plugins\Accommodation\Models\HotelContact;
@@ -18,7 +18,7 @@ use App\Plugins\Pricing\Models\PriceSet;
 use App\Plugins\Booking\Models\Reservation;
 use App\Plugins\Accommodation\Models\Room;
 use App\Plugins\Pricing\Models\RoomInventory;
-use App\Plugins\Vendor\Models\Vendor;
+use App\Plugins\Partner\Models\Partner;
 
 class Hotel extends BaseModel
 {
@@ -31,8 +31,8 @@ class Hotel extends BaseModel
     {
         parent::boot();
 
-        // Vendor scope'u uygula
-        static::addGlobalScope(new VendorScope);
+        // Partner scope'u uygula
+        static::addGlobalScope(new PartnerScope);
     }
 
     /**
@@ -44,7 +44,7 @@ class Hotel extends BaseModel
         'created_by',
         'updated_by',
         'tenant_id',
-        'vendor_id',
+        'partner_id',
         'region_id',
         'name',
         'slug',
@@ -412,10 +412,18 @@ class Hotel extends BaseModel
     }
 
     /**
-     * Vendor (Partner) ilişkisi.
+     * Partner ilişkisi.
+     */
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+    
+    /**
+     * Alias for partner relationship (backward compatibility).
      */
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(Vendor::class);
+        return $this->partner();
     }
 }

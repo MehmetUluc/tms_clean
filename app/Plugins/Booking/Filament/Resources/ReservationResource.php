@@ -19,9 +19,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class ReservationResource extends Resource
 {
+    use HasFilamentPermissions;
     protected static ?string $model = Reservation::class;
 
     protected static ?string $modelLabel = 'Rezervasyon';
@@ -33,25 +35,13 @@ class ReservationResource extends Resource
     
     protected static ?int $navigationSort = 1;
     
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
+    // Permission properties
+    protected static ?string $viewAnyPermission = 'view_reservations';
+    protected static ?string $viewPermission = 'view_reservations';
+    protected static ?string $createPermission = 'create_reservations';
+    protected static ?string $updatePermission = 'update_reservations';
+    protected static ?string $deletePermission = 'delete_reservations';
     
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
-    
-    public static function canEdit(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin düzenlemesine izin ver
-    }
-    
-    public static function canDelete(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin silmesine izin ver
-    }
 
     public static function form(Form $form): Form
     {

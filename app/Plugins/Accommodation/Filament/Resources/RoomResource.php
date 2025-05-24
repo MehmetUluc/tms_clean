@@ -19,9 +19,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class RoomResource extends Resource
 {
+    use HasFilamentPermissions;
     protected static ?string $model = Room::class;
 
     protected static ?string $modelLabel = 'Oda';
@@ -32,6 +34,13 @@ class RoomResource extends Resource
     protected static ?string $navigationGroup = 'Oda Yönetimi';
 
     protected static ?int $navigationSort = 2;
+
+    // Permission properties
+    protected static ?string $viewAnyPermission = 'view_rooms';
+    protected static ?string $viewPermission = 'view_rooms';
+    protected static ?string $createPermission = 'create_rooms';
+    protected static ?string $updatePermission = 'update_rooms';
+    protected static ?string $deletePermission = 'delete_rooms';
 
     /**
      * Vendor kullanıcıları için navigasyon etiketlerini özelleştirelim
@@ -73,26 +82,6 @@ class RoomResource extends Resource
 
         // Varsayılan sıralama
         return static::$navigationSort;
-    }
-    
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
-    
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
-    
-    public static function canEdit(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin düzenlemesine izin ver
-    }
-    
-    public static function canDelete(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin silmesine izin ver
     }
 
     public static function form(Form $form): Form

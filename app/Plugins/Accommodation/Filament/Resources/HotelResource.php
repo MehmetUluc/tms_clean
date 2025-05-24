@@ -16,31 +16,21 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Schema;
 //use App\Plugins\Core\src\Filament\Components\ImageGalleryUpload;
 use App\Plugins\Core\src\Models\BaseModel;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class HotelResource extends Resource
 {
+    use HasFilamentPermissions;
+    
     protected static ?string $modelLabel = 'Otel';
     protected static ?string $pluralModelLabel = 'Oteller';
     
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
-    
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
-    
-    public static function canEdit(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin düzenlemesine izin ver
-    }
-    
-    public static function canDelete(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin silmesine izin ver
-    }
+    // Permission tanımlamaları
+    protected static ?string $viewAnyPermission = 'view_hotels';
+    protected static ?string $viewPermission = 'view_hotels';
+    protected static ?string $createPermission = 'create_hotels';
+    protected static ?string $updatePermission = 'update_hotels';
+    protected static ?string $deletePermission = 'delete_hotels';
     
     protected static ?string $model = Hotel::class;
 

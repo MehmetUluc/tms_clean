@@ -12,12 +12,18 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class HotelTypeResource extends Resource
 {
-    protected static ?string $model = HotelType::class;
-    
-    protected static ?string $modelLabel = 'Otel Tipi';
+    use HasFilamentPermissions;
+
+    protected static ?string $viewAnyPermission = 'view_hotel_types';
+    protected static ?string $viewPermission = 'view_hotel_types';
+    protected static ?string $createPermission = 'create_hotel_types';
+    protected static ?string $updatePermission = 'update_hotel_types';
+    protected static ?string $deletePermission = 'delete_hotel_types';
+    protected static ?string $model = HotelType::class;protected static ?string $modelLabel = 'Otel Tipi';
     protected static ?string $pluralModelLabel = 'Otel Tipleri';
     protected static ?string $navigationLabel = 'Otel Tipleri';
 

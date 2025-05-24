@@ -28,10 +28,20 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class PartnerResource extends Resource
 {
+    use HasFilamentPermissions;
+    
     protected static ?string $model = Partner::class;
+    
+    // Permission tanımlamaları
+    protected static ?string $viewAnyPermission = 'view_partners';
+    protected static ?string $viewPermission = 'view_partners';
+    protected static ?string $createPermission = 'create_partners';
+    protected static ?string $updatePermission = 'update_partners';
+    protected static ?string $deletePermission = 'delete_partners';
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
@@ -47,6 +57,21 @@ class PartnerResource extends Resource
     public static function getPluralLabel(): string
     {
         return __('Partners');
+    }
+    
+    /**
+     * This resource is for admin panel only
+     * Override trait method to add partner role check
+     */
+    public static function canAccess(): bool
+    {
+        // Partners cannot access their own management page
+        if (auth()->check() && auth()->user()->hasRole('partner')) {
+            return false;
+        }
+        
+        // Use trait's permission check
+        return parent::canAccess();
     }
 
     public static function getLabel(): string

@@ -18,6 +18,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use App\Http\Middleware\EnsureUserIsNotPartner;
 use App\Plugins\Pricing\PricingPlugin;
 use App\Plugins\Core\CorePlugin;
 use App\Plugins\Hotel\HotelPlugin;
@@ -104,6 +105,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureUserIsNotPartner::class,
             ])
 ;
     }

@@ -12,12 +12,18 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class HotelAmenityResource extends Resource
 {
-    protected static ?string $model = HotelAmenity::class;
-    
-    protected static ?string $modelLabel = 'Otel Özelliği';
+    use HasFilamentPermissions;
+
+    protected static ?string $viewAnyPermission = 'view_amenities';
+    protected static ?string $viewPermission = 'view_amenities';
+    protected static ?string $createPermission = 'create_amenities';
+    protected static ?string $updatePermission = 'update_amenities';
+    protected static ?string $deletePermission = 'delete_amenities';
+    protected static ?string $model = HotelAmenity::class;protected static ?string $modelLabel = 'Otel Özelliği';
     protected static ?string $pluralModelLabel = 'Otel Özellikleri';
     protected static ?string $navigationLabel = 'Otel Özellikleri';
 

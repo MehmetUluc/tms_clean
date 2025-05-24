@@ -14,37 +14,23 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use App\Plugins\Core\src\Traits\HasFilamentPermissions;
 
 class RegionResource extends Resource
 {
-    protected static ?string $model = Region::class;
+    use HasFilamentPermissions;
 
-    protected static ?string $modelLabel = 'Bölge';
+    protected static ?string $viewAnyPermission = 'view_regions';
+    protected static ?string $viewPermission = 'view_regions';
+    protected static ?string $createPermission = 'create_regions';
+    protected static ?string $updatePermission = 'update_regions';
+    protected static ?string $deletePermission = 'delete_regions';
+    protected static ?string $model = Region::class;protected static ?string $modelLabel = 'Bölge';
     protected static ?string $pluralModelLabel = 'Bölgeler';
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static ?string $navigationGroup = 'Otel Yönetimi';
     protected static ?int $navigationSort = 20;
-
-    public static function canAccess(): bool
-    {
-        return true; // Geçici olarak herkesin erişimine izin ver
-    }
-
-    public static function canCreate(): bool
-    {
-        return true; // Geçici olarak herkesin oluşturmasına izin ver
-    }
-
-    public static function canEdit(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin düzenlemesine izin ver
-    }
-
-    public static function canDelete(Model $record): bool
-    {
-        return true; // Geçici olarak herkesin silmesine izin ver
-    }
 
     public static function form(Form $form): Form
     {
