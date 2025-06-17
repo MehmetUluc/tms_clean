@@ -26,8 +26,8 @@ class PartnerPricing extends HotelPricingPage
     {
         return Auth::check() && 
                Auth::user()->isPartner() && 
-               Auth::user()->partner &&
-               Auth::user()->partner->onboarding_completed &&
+               Auth::user()->getAssociatedPartner() &&
+               Auth::user()->getAssociatedPartner()->onboarding_completed &&
                Auth::user()->can('view_own_pricing');
     }
     
@@ -71,7 +71,7 @@ class PartnerPricing extends HotelPricingPage
                                 
                                 // Override options to show only partner's hotels
                                 $field->options(function() {
-                                    $partner = Auth::user()->partner;
+                                    $partner = Auth::user()->getAssociatedPartner();
                                     if (!$partner) {
                                         return [];
                                     }
@@ -83,7 +83,7 @@ class PartnerPricing extends HotelPricingPage
                                         ->toArray();
                                 })
                                 ->getSearchResultsUsing(function (string $search) {
-                                    $partner = Auth::user()->partner;
+                                    $partner = Auth::user()->getAssociatedPartner();
                                     if (!$partner) {
                                         return [];
                                     }
@@ -115,7 +115,7 @@ class PartnerPricing extends HotelPricingPage
         // If hotel_id is provided, verify it belongs to the partner
         if ($hotel_id || $hotel) {
             $hotelIdToCheck = $hotel_id ?: $hotel;
-            $partner = Auth::user()->partner;
+            $partner = Auth::user()->getAssociatedPartner();
             
             if ($partner) {
                 $hotelBelongsToPartner = Hotel::where('id', $hotelIdToCheck)
@@ -139,7 +139,7 @@ class PartnerPricing extends HotelPricingPage
     public static function getNavigationBadge(): ?string
     {
         try {
-            $partner = Auth::user()->partner ?? null;
+            $partner = Auth::user()->getAssociatedPartner() ?? null;
             if (!$partner) {
                 return null;
             }

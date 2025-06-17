@@ -2,9 +2,7 @@
 
 namespace App\Plugins\Partner;
 
-use App\Plugins\Partner\Filament\Pages\PartnerDashboard;
-use App\Plugins\Partner\Filament\Pages\PartnerOnboarding;
-use App\Plugins\Partner\Filament\Pages\PartnerPricing;
+use App\Plugins\Partner\Filament\Pages\SimplePartnerDashboard;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 
@@ -24,9 +22,7 @@ class PartnerPlugin implements Plugin
     {
         $panel
             ->pages([
-                PartnerDashboard::class,
-                PartnerOnboarding::class,
-                PartnerPricing::class,
+                SimplePartnerDashboard::class,
             ]);
     }
 

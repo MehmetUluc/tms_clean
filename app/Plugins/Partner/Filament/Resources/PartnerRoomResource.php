@@ -26,8 +26,8 @@ class PartnerRoomResource extends RoomResource
     {
         return Auth::check() && 
                Auth::user()->isPartner() && 
-               Auth::user()->partner &&
-               Auth::user()->partner->onboarding_completed &&
+               Auth::user()->getAssociatedPartner() &&
+               Auth::user()->getAssociatedPartner()->onboarding_completed &&
                Auth::user()->can('view_own_rooms');
     }
     
@@ -38,7 +38,7 @@ class PartnerRoomResource extends RoomResource
     {
         $query = parent::getEloquentQuery();
         
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if ($partner) {
             // Get partner's hotel IDs
             $hotelIds = Hotel::where('partner_id', $partner->id)->pluck('id');
@@ -70,7 +70,7 @@ class PartnerRoomResource extends RoomResource
                                     
                                     // Override to show only partner's hotels
                                     $field->options(function() {
-                                        $partner = Auth::user()->partner ?? null;
+                                        $partner = Auth::user()->getAssociatedPartner() ?? null;
                                         if (!$partner) {
                                             return [];
                                         }
@@ -84,7 +84,7 @@ class PartnerRoomResource extends RoomResource
                                     ->afterStateUpdated(function ($state) {
                                         // Verify hotel belongs to partner
                                         if ($state) {
-                                            $partner = Auth::user()->partner ?? null;
+                                            $partner = Auth::user()->getAssociatedPartner() ?? null;
                                             if ($partner) {
                                                 $hotelBelongsToPartner = Hotel::where('id', $state)
                                                     ->where('partner_id', $partner->id)
@@ -120,7 +120,7 @@ class PartnerRoomResource extends RoomResource
      */
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if (!$partner) {
             return false;
         }
@@ -138,7 +138,7 @@ class PartnerRoomResource extends RoomResource
      */
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if (!$partner) {
             return false;
         }
@@ -156,7 +156,7 @@ class PartnerRoomResource extends RoomResource
      */
     public static function canView(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if (!$partner) {
             return false;
         }
@@ -187,7 +187,7 @@ class PartnerRoomResource extends RoomResource
     public static function getNavigationBadge(): ?string
     {
         try {
-            $partner = Auth::user()->partner ?? null;
+            $partner = Auth::user()->getAssociatedPartner() ?? null;
             if (!$partner) {
                 return null;
             }

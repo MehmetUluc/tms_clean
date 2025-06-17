@@ -33,8 +33,18 @@ class PartnerServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Load migrations
+        // Load migrations - always needed
         $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+
+        // Skip everything else for non-partner routes
+        $currentPath = request()->path();
+        $isPartnerRoute = str_starts_with($currentPath, 'partner/') || 
+                         str_starts_with($currentPath, 'admin/') ||
+                         str_starts_with($currentPath, 'livewire/');
+                         
+        if (!$isPartnerRoute) {
+            return; // Skip booting for B2C routes
+        }
 
         // Register routes
         $this->registerRoutes();
@@ -90,6 +100,19 @@ class PartnerServiceProvider extends ServiceProvider
     {
         // Only run in web requests to avoid running during migrations
         if (!$this->app->runningInConsole() && !$this->app->runningUnitTests()) {
+            // Skip permission checks for frontend routes
+            $currentRoute = request()->route();
+            if ($currentRoute) {
+                $routeName = $currentRoute->getName();
+                $routePrefix = explode('.', $routeName ?? '')[0] ?? '';
+                
+                // Skip for non-admin/partner routes
+                if (!in_array($routePrefix, ['filament', 'admin', 'partner'])) {
+                    return;
+                }
+            }
+            
+            try {
             // Define Partner-specific permissions
             $permissions = [
                 // Partner management
@@ -170,6 +193,10 @@ class PartnerServiceProvider extends ServiceProvider
 
             foreach ($partnerPermissions as $permission) {
                 $partnerRole->givePermissionTo($permission);
+            }
+            } catch (\Exception $e) {
+                // Log the error but don't break the application
+                \Log::warning('Failed to register partner permissions: ' . $e->getMessage());
             }
         }
     }

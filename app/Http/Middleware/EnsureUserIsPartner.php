@@ -16,7 +16,12 @@ class EnsureUserIsPartner
     public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect('/partner/login');
+        }
+        
+        // Super admin should not access partner panel
+        if (auth()->user()->isSuperAdmin()) {
+            return redirect('/admin');
         }
         
         // Check if user has partner role
@@ -25,7 +30,7 @@ class EnsureUserIsPartner
         }
         
         // Check if partner has completed onboarding
-        $partner = auth()->user()->partner;
+        $partner = auth()->user()->getAssociatedPartner();
         
         // Allow access to onboarding route
         if ($request->is('partner/partner-onboarding') || $request->routeIs('filament.partner.pages.partner-onboarding')) {

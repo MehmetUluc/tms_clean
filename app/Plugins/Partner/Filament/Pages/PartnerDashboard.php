@@ -36,7 +36,7 @@ class PartnerDashboard extends Page
     
     public function mount(): void
     {
-        $this->partner = Auth::user()->partner;
+        $this->partner = Auth::user()->getAssociatedPartner();
         
         if (!$this->partner) {
             // Eğer partner kaydı yoksa onboarding'e yönlendir

@@ -25,8 +25,8 @@ class PartnerReservationResource extends ReservationResource
     {
         return Auth::check() && 
                Auth::user()->isPartner() && 
-               Auth::user()->partner &&
-               Auth::user()->partner->onboarding_completed &&
+               Auth::user()->getAssociatedPartner() &&
+               Auth::user()->getAssociatedPartner()->onboarding_completed &&
                Auth::user()->can('view_own_reservations');
     }
     
@@ -55,7 +55,7 @@ class PartnerReservationResource extends ReservationResource
     {
         $query = parent::getEloquentQuery();
         
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if ($partner) {
             // Get partner's hotel IDs
             $hotelIds = Hotel::where('partner_id', $partner->id)->pluck('id');
@@ -87,7 +87,7 @@ class PartnerReservationResource extends ReservationResource
                             
                             // Override to show only partner's hotels
                             $field->options(function() {
-                                $partner = Auth::user()->partner ?? null;
+                                $partner = Auth::user()->getAssociatedPartner() ?? null;
                                 if (!$partner) {
                                     return [];
                                 }
@@ -101,7 +101,7 @@ class PartnerReservationResource extends ReservationResource
                             ->afterStateUpdated(function (callable $set, $state) {
                                 // Verify hotel belongs to partner
                                 if ($state) {
-                                    $partner = Auth::user()->partner ?? null;
+                                    $partner = Auth::user()->getAssociatedPartner() ?? null;
                                     if ($partner) {
                                         $hotelBelongsToPartner = Hotel::where('id', $state)
                                             ->where('partner_id', $partner->id)
@@ -176,7 +176,7 @@ class PartnerReservationResource extends ReservationResource
     public static function getNavigationBadge(): ?string
     {
         try {
-            $partner = Auth::user()->partner ?? null;
+            $partner = Auth::user()->getAssociatedPartner() ?? null;
             if (!$partner) {
                 return null;
             }

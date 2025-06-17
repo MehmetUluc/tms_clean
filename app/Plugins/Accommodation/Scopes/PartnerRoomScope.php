@@ -45,7 +45,7 @@ class PartnerRoomScope implements Scope
         
         // Eğer partner_staff rolü varsa partner'ın otellerine ait odaları görsün
         if (auth()->user()->hasRole('partner_staff')) {
-            $partner = auth()->user()->partner;
+            $partner = auth()->user()->getAssociatedPartner();
             
             if ($partner) {
                 $builder->whereHas('hotel', function ($query) use ($partner) {

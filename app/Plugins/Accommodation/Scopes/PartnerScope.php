@@ -43,7 +43,7 @@ class PartnerScope implements Scope
         
         // Eğer partner_staff rolü varsa partner'ın otellerini görsün
         if (auth()->user()->hasRole('partner_staff')) {
-            $partner = auth()->user()->partner;
+            $partner = auth()->user()->getAssociatedPartner();
             
             if ($partner) {
                 $builder->where('partner_id', $partner->id);

@@ -28,7 +28,7 @@ class CreatePartnerStaff extends CreateRecord
     
     protected function afterCreate(): void
     {
-        $partner = Auth::user()->partner;
+        $partner = Auth::user()->getAssociatedPartner();
         
         if ($partner) {
             // Add user to partner's staff list

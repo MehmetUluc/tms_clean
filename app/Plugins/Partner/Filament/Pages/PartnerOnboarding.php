@@ -325,6 +325,6 @@ class PartnerOnboarding extends Page implements HasForms
     {
         // Partner rolü olan veya henüz onboarding tamamlamamış kullanıcılar erişebilir
         return Auth::user()->hasRole('partner') || 
-               (Auth::user()->partner && !Auth::user()->partner->onboarding_completed);
+               (Auth::user()->getAssociatedPartner() && !Auth::user()->getAssociatedPartner()->onboarding_completed);
     }
 }

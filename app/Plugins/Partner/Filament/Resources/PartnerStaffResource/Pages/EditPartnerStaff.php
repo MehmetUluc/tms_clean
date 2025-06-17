@@ -17,11 +17,11 @@ class EditPartnerStaff extends EditRecord
         $actions = [];
         
         // Don't allow deleting the partner owner
-        if ($this->record->id !== Auth::user()->partner->user_id) {
+        if ($this->record->id !== Auth::user()->getAssociatedPartner()->user_id) {
             $actions[] = Actions\DeleteAction::make()
                 ->before(function () {
                     // Remove from partner's staff list
-                    $partner = Auth::user()->partner;
+                    $partner = Auth::user()->getAssociatedPartner();
                     if ($partner) {
                         $staffIds = $partner->staff_user_ids ?? [];
                         $staffIds = array_diff($staffIds, [$this->record->id]);
@@ -41,7 +41,7 @@ class EditPartnerStaff extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Don't change role for partner owner
-        if ($this->record->id === Auth::user()->partner->user_id) {
+        if ($this->record->id === Auth::user()->getAssociatedPartner()->user_id) {
             unset($data['role']);
         }
         
@@ -51,7 +51,7 @@ class EditPartnerStaff extends EditRecord
     protected function afterSave(): void
     {
         // Update role if changed and not partner owner
-        if (isset($this->data['role']) && $this->record->id !== Auth::user()->partner->user_id) {
+        if (isset($this->data['role']) && $this->record->id !== Auth::user()->getAssociatedPartner()->user_id) {
             // Remove all existing partner roles
             $this->record->removeRole('partner');
             $this->record->removeRole('partner_staff');

@@ -36,8 +36,8 @@ class PartnerStaffResource extends Resource
     {
         return Auth::check() && 
                Auth::user()->isPartner() && 
-               Auth::user()->partner &&
-               Auth::user()->partner->onboarding_completed &&
+               Auth::user()->getAssociatedPartner() &&
+               Auth::user()->getAssociatedPartner()->onboarding_completed &&
                Auth::user()->can('manage_own_staff');
     }
     
@@ -46,7 +46,7 @@ class PartnerStaffResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $partner = Auth::user()->partner;
+        $partner = Auth::user()->getAssociatedPartner();
         
         if (!$partner) {
             // Return empty query if no partner
@@ -105,7 +105,7 @@ class PartnerStaffResource extends Resource
                             ])
                             ->default('partner_staff')
                             ->required()
-                            ->disabled(fn ($record) => $record && $record->id === Auth::user()->partner->user_id)
+                            ->disabled(fn ($record) => $record && $record->id === Auth::user()->getAssociatedPartner()->user_id)
                             ->helperText('Partner Yöneticisi tüm yetkilere sahiptir. Editörler sınırlı yetkiye sahiptir.'),
                     ]),
                     
@@ -203,7 +203,7 @@ class PartnerStaffResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->before(function (Tables\Actions\DeleteAction $action, $record) {
                         // Prevent deleting the partner owner
-                        if ($record->id === Auth::user()->partner->user_id) {
+                        if ($record->id === Auth::user()->getAssociatedPartner()->user_id) {
                             $action->cancel();
                             \Filament\Notifications\Notification::make()
                                 ->title('İşlem Başarısız')
@@ -218,7 +218,7 @@ class PartnerStaffResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (Tables\Actions\DeleteBulkAction $action, $records) {
                             // Remove partner owner from bulk delete
-                            $partnerId = Auth::user()->partner->user_id;
+                            $partnerId = Auth::user()->getAssociatedPartner()->user_id;
                             $records = $records->filter(fn ($record) => $record->id !== $partnerId);
                             
                             if ($records->isEmpty()) {
@@ -252,7 +252,7 @@ class PartnerStaffResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         try {
-            $partner = Auth::user()->partner ?? null;
+            $partner = Auth::user()->getAssociatedPartner() ?? null;
             if (!$partner) {
                 return null;
             }

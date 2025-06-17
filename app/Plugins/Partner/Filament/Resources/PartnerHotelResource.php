@@ -25,8 +25,8 @@ class PartnerHotelResource extends HotelResource
     {
         return Auth::check() && 
                Auth::user()->isPartner() && 
-               Auth::user()->partner &&
-               Auth::user()->partner->onboarding_completed &&
+               Auth::user()->getAssociatedPartner() &&
+               Auth::user()->getAssociatedPartner()->onboarding_completed &&
                Auth::user()->can('view_own_hotels');
     }
     
@@ -45,7 +45,7 @@ class PartnerHotelResource extends HotelResource
     {
         return Auth::check() && 
                Auth::user()->can('update_own_hotels') &&
-               $record->partner_id === Auth::user()->partner->id;
+               $record->partner_id === Auth::user()->getAssociatedPartner()->id;
     }
     
     /**
@@ -55,7 +55,7 @@ class PartnerHotelResource extends HotelResource
     {
         return Auth::check() && 
                Auth::user()->can('delete_own_hotels') &&
-               $record->partner_id === Auth::user()->partner->id;
+               $record->partner_id === Auth::user()->getAssociatedPartner()->id;
     }
     
     /**
@@ -65,7 +65,7 @@ class PartnerHotelResource extends HotelResource
     {
         return Auth::check() && 
                Auth::user()->can('view_own_hotels') &&
-               $record->partner_id === Auth::user()->partner->id;
+               $record->partner_id === Auth::user()->getAssociatedPartner()->id;
     }
     
     /**
@@ -75,7 +75,7 @@ class PartnerHotelResource extends HotelResource
     {
         $query = parent::getEloquentQuery();
         
-        $partner = Auth::user()->partner ?? null;
+        $partner = Auth::user()->getAssociatedPartner() ?? null;
         if ($partner) {
             $query->where('partner_id', $partner->id);
         }
@@ -93,7 +93,7 @@ class PartnerHotelResource extends HotelResource
         
         // Add hidden partner_id field
         $partnerField = \Filament\Forms\Components\Hidden::make('partner_id')
-            ->default(fn() => Auth::user()->partner?->id)
+            ->default(fn() => Auth::user()->getAssociatedPartner()?->id)
             ->required();
         
         // Prepend to schema
@@ -133,7 +133,7 @@ class PartnerHotelResource extends HotelResource
     public static function getNavigationBadge(): ?string
     {
         try {
-            $partner = Auth::user()->partner ?? null;
+            $partner = Auth::user()->getAssociatedPartner() ?? null;
             if (!$partner) {
                 return null;
             }
